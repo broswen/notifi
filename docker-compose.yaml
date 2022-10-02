@@ -1,0 +1,92 @@
+version: "3.9"
+services:
+  config:
+    build:
+      context: .
+      dockerfile: Dockerfile.config
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/config"
+    environment:
+      BROKERS: broker:9092
+      API_PORT: 8080
+      METRICS_PORT: 8081
+      DSN: postgres://postgres:password@postgres:5432/notifi
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+  router:
+    build:
+      context: .
+      dockerfile: Dockerfile.router
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/router"
+    environment:
+      METRICS_PORT: 8081
+      BROKERS: broker:9092
+      DSN: postgres://postgres:password@postgres:5432/notifi
+  delivery:
+    build:
+      context: .
+      dockerfile: Dockerfile.delivery
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/router"
+    environment:
+      METRICS_PORT: 8081
+      BROKERS: broker:9092
+      DSN: postgres://postgres:password@postgres:5432/notifi
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  broker:
+    container_name: broker
+    hostname: broker
+    image: bitnami/kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    build:
+      context: sql
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: notifi
+    ports:
+      - "5432:5432"

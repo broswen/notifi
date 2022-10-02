@@ -36,6 +36,8 @@ func (d *EmailDestination) Deliver(n entity.Notification) error {
 	m.AddContent(c)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
+
+	//TODO add retry with exponential backoff on failure
 	resp, err := d.client.SendWithContext(ctx, m)
 	if err != nil {
 		return err

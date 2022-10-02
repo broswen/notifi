@@ -42,8 +42,8 @@ func (nr *NotificationRequest) Validate() error {
 	return nil
 }
 
-func (nr NotificationRequest) IntoEntity() *entity.Notification {
-	n := &entity.Notification{
+func (nr NotificationRequest) IntoEntity() entity.Notification {
+	n := entity.Notification{
 		ID: ksuid.New().String(),
 		Destination: entity.Destination{
 			Email: nr.Email,

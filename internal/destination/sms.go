@@ -30,6 +30,7 @@ func (d *SMSDestination) Deliver(n entity.Notification) error {
 		From: &d.number,
 		To:   &n.Destination.SMS,
 	}
+	//TODO add retry with exponential backoff on failure
 	_, err := d.client.Api.CreateMessage(params)
 	if err != nil {
 		return err
