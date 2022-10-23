@@ -1,11 +1,10 @@
 package api
 
 import (
-	"github.com/broswen/notifi/internal/queue/producer"
 	"net/http"
 )
 
-func HandleCreateNotification(p producer.Producer) http.HandlerFunc {
+func (api *API) HandleCreateNotification() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &NotificationRequest{}
 		err := readJSON(w, r, req)
@@ -21,7 +20,7 @@ func HandleCreateNotification(p producer.Producer) http.HandlerFunc {
 		}
 
 		n := req.IntoEntity()
-		err = p.Submit(n)
+		err = api.Producer.Submit(n)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

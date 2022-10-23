@@ -56,6 +56,7 @@ func (p *KafkaProducer) Submit(notification entity.Notification) error {
 	})
 	if err != nil {
 		log.Err(err).Str("producer_id", p.id).Str("topic", p.topic).Str("broker", p.broker).Str("notification_id", notification.ID).Msg("couldn't submit notification")
+		return err
 	}
 	return nil
 }

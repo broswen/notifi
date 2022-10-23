@@ -6,7 +6,6 @@ import (
 	"github.com/broswen/notifi/internal/api"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -62,12 +61,12 @@ func main() {
 		return nil
 	})
 
-	r := chi.NewRouter()
-	r.Use(middleware.StripSlashes)
-	r.Post("/", api.HandleCreateNotification(p1))
+	app := api.API{
+		Producer: p1,
+	}
 	publicServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", apiPort),
-		Handler: r,
+		Handler: app.Router(),
 	}
 	eg.Go(func() error {
 		log.Debug().Msgf("public api listening on :%s", apiPort)
@@ -82,14 +81,15 @@ func main() {
 	eg.Go(func() error {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
+		sig := <-sigint
+		log.Debug().Str("signal", sig.String()).Msg("received signal")
 		if err := publicServer.Shutdown(context.Background()); err != nil {
 			log.Error().Err(err).Msg("error shutting down public server")
 		}
 		return err
 	})
 
-	err = eg.Wait()
-	if err != nil {
+	if err := eg.Wait(); err != nil {
 		log.Error().Err(err).Msg("")
 	}
 }

@@ -52,8 +52,13 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating kafka producer")
 	}
-
 	defer p1.Close()
+
+	p2, err := producer.NewLogProducer("router", "scheduled")
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating log producer")
+	}
+	defer p2.Close()
 
 	eg := errgroup.Group{}
 	m := chi.NewRouter()
@@ -67,11 +72,10 @@ func main() {
 		return nil
 	})
 
-	c.HandleFunc("notification_request", func(n entity.Notification) error {
+	c.HandleFunc(requestTopic, func(n entity.Notification) error {
 		if n.Scheduled() {
 			//TODO add postgres producer to store notifications
-			log.Debug().Str("id", n.ID).Msg("logging instead of scheduling")
-			//return p2.Submit(n)
+			return p2.Submit(n)
 			return nil
 		} else {
 			//submit to delivery queue if instant notification
@@ -97,8 +101,7 @@ func main() {
 		return nil
 	})
 
-	err = eg.Wait()
-	if err != nil {
+	if err = eg.Wait(); err != nil {
 		log.Error().Err(err).Msg("")
 	}
 }

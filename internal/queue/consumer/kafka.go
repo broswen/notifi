@@ -57,6 +57,7 @@ func (c *KafkaConsumer) Close() error {
 	}
 	return nil
 }
+
 func (c *KafkaConsumer) Consume() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	c.cancel = cancel

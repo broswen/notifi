@@ -3,21 +3,17 @@ services:
   config:
     build:
       context: .
-      dockerfile: Dockerfile.config
-    deploy:
-      mode: replicated
-      replicas: 2
+      dockerfile: Dockerfile
     depends_on:
       - broker
       - postgres
     command: sh -c "
       sleep 4 &&
-      ./bin/config"
+      ./bin/notifi"
     environment:
       BROKERS: broker:9092
-      API_PORT: 8080
-      METRICS_PORT: 8081
       DSN: postgres://postgres:password@postgres:5432/notifi
+      REQUEST_TOPIC: notifi-request
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -35,26 +31,27 @@ services:
       sleep 4 &&
       ./bin/router"
     environment:
-      METRICS_PORT: 8081
       BROKERS: broker:9092
       DSN: postgres://postgres:password@postgres:5432/notifi
-  delivery:
-    build:
-      context: .
-      dockerfile: Dockerfile.delivery
-    deploy:
-      mode: replicated
-      replicas: 2
-    depends_on:
-      - broker
-      - postgres
-    command: sh -c "
-      sleep 4 &&
-      ./bin/router"
-    environment:
-      METRICS_PORT: 8081
-      BROKERS: broker:9092
-      DSN: postgres://postgres:password@postgres:5432/notifi
+      REQUEST_TOPIC: notifi-request
+      DELIVERY_TOPIC: notifi-delivery
+#  delivery:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.delivery
+#    deploy:
+#      mode: replicated
+#      replicas: 2
+#    depends_on:
+#      - broker
+#      - postgres
+#    command: sh -c "
+#      sleep 4 &&
+#      ./bin/router"
+#    environment:
+#      METRICS_PORT: 8081
+#      BROKERS: broker:9092
+#      DSN: postgres://postgres:password@postgres:5432/notifi
   zookeeper:
     image: bitnami/zookeeper:latest
     hostname: zookeeper
