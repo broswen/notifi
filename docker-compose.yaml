@@ -21,9 +21,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.router
-    deploy:
-      mode: replicated
-      replicas: 2
     depends_on:
       - broker
       - postgres
@@ -40,9 +37,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.delivery
-    deploy:
-      mode: replicated
-      replicas: 2
     depends_on:
       - broker
       - postgres
@@ -60,6 +54,21 @@ services:
       TWILIO_TOKEN: 123
       FROM_NUMBER: 18005551234
       SKIP_DELIVERY: true
+  poller:
+    build:
+      context: .
+      dockerfile: Dockerfile.poller
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/poller"
+    environment:
+      BROKERS: broker:9092
+      DSN: postgres://postgres:password@postgres:5432/notifi
+      DELIVERY_TOPIC: notifi-delivery
+      POLL_INTERVAL: 1m
   zookeeper:
     image: bitnami/zookeeper:latest
     hostname: zookeeper
