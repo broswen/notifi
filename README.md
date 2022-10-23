@@ -12,6 +12,6 @@
 - [ ] prevent spam when db is down and notification is sent successfully
 - [ ] add api service tokens, count messages per token in metrics
   - [ ] admin endpoints to manage create service tokens
-- [ ] add prometheus metrics
+- [x] add prometheus metrics
 - [ ] set up k8s
 - [ ] add tests

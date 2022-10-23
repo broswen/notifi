@@ -10,7 +10,7 @@ RUN go get -d -v ./...
 COPY ./cmd ./cmd
 COPY ./internal ./internal
 # build the binary
-RUN GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -o poller ./cmd/poller/main.go
+RUN GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -o poller ./cmd/poller/*.go
 
 FROM alpine
 # copy the binary from build stage

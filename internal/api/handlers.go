@@ -37,7 +37,7 @@ func (api *API) HandleDeleteNotification() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-
+		NotificationDeleted.Inc()
 		err = writeOK(w, http.StatusOK, n)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -67,7 +67,7 @@ func (api *API) HandleCreateNotification() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-
+		NotificationCreated.Inc()
 		err = writeOK(w, http.StatusOK, n)
 		if err != nil {
 			writeErr(w, nil, err)

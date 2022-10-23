@@ -118,6 +118,14 @@ func main() {
 			//TODO add something to prevent frequent delivery retries if the delivery succeeds but database fails to save
 			log.Error().Err(err).Msg("error updating notification")
 		}
+		if !n.Scheduled() {
+			//DeliveryDelay is the time from creation to delivery for instant notifications
+			DeliveryDelay.Observe(float64(n.DeliveredAt.Sub(n.CreatedAt)))
+		} else {
+			//DeliveryDelay is the difference from scheduled time to delivery for scheduled notifications
+			//a negative value means it was delivered early
+			ScheduledOffset.Observe(float64(n.DeliveredAt.Sub(*n.Schedule)))
+		}
 		return err
 	})
 

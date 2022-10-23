@@ -1,0 +1,12 @@
+package destination
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	NotificationDelivered = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notification_delivered",
+	})
+)

@@ -45,5 +45,6 @@ func (d *EmailDestination) Deliver(n entity.Notification) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("sendgrid send email: %d %s", resp.StatusCode, resp.Body)
 	}
+	NotificationDelivered.Inc()
 	return nil
 }

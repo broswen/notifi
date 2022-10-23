@@ -65,8 +65,10 @@ func main() {
 				notifications, err := scheduledRepo.ListScheduled(ctx, pollPeriod, pollLimit)
 				if err != nil {
 					log.Error().Err(err).Msg("error listing scheduled notifications")
+					PollErrors.Inc()
 					continue
 				}
+				PollNotifications.Add(float64(len(notifications)))
 				for _, n := range notifications {
 					//TODO mark in-progress to avoid resubmitting during another poll
 					log.Debug().Str("notification_id", n.ID).Time("schedule", *n.Schedule).Msg("submitting scheduled notification")
@@ -76,6 +78,7 @@ func main() {
 						continue
 					}
 				}
+				SuccessfulPoll.Inc()
 			case <-ctx.Done():
 				log.Debug().Msg("context cancelled")
 				return nil
