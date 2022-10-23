@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
+	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,6 +30,15 @@ func main() {
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
 		log.Fatal().Msgf("postgres DSN is empty")
+	}
+	metricsPort := os.Getenv("METRICS_PORT")
+	if metricsPort == "" {
+		metricsPort = "8081"
+	}
+
+	metricsPath := os.Getenv("METRICS_PATH")
+	if metricsPath == "" {
+		metricsPath = "/metrics"
 	}
 	pollInterval := os.Getenv("POLL_INTERVAL")
 	if pollInterval == "" {
@@ -102,6 +115,17 @@ func main() {
 				return nil
 			}
 		}
+	})
+
+	m := chi.NewRouter()
+	m.Handle(metricsPath, promhttp.Handler())
+	eg.Go(func() error {
+		if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), m); err != nil {
+			if err != http.ErrServerClosed {
+				return err
+			}
+		}
+		return nil
 	})
 
 	eg.Go(func() error {

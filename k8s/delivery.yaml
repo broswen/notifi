@@ -38,7 +38,7 @@ data:
   DELIVERY_TOPIC: notifi-delivery
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
-  SKIP_DELIVERY: true
+  SKIP_DELIVERY: "true"
 ---
 # Source: delivery/templates/deployment.yaml
 apiVersion: apps/v1
