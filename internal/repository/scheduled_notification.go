@@ -9,7 +9,7 @@ import (
 )
 
 type ScheduledNotificationRepository interface {
-	ListScheduled(ctx context.Context, period time.Duration, limit int64) ([]entity.Notification, error)
+	ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error)
 }
 
 type ScheduledNotificationSqlRepository struct {
@@ -22,7 +22,7 @@ func NewScheduledNotificationSqlRepository(pool *pgxpool.Pool) (ScheduledNotific
 	}, nil
 }
 
-func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, limit int64) ([]entity.Notification, error) {
+func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
 	//p is the maximum time we are willing to send notifications early
 	p := time.Now().Add(period)
 	//TODO verify proper filtering order with compound index
@@ -32,7 +32,7 @@ func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, p
 		and schedule is not null
 		and schedule < $1
 		order by schedule asc
-		limit $2;`, p, limit)
+		offset $2 limit $3;`, p, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
 		return nil, err
