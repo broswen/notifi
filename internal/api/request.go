@@ -49,8 +49,10 @@ func (nr NotificationRequest) IntoEntity() entity.Notification {
 			Email: nr.Email,
 			SMS:   nr.SMS,
 		},
-		Content:  nr.Content,
-		Schedule: nr.Schedule,
+		Content:    nr.Content,
+		Schedule:   nr.Schedule,
+		CreatedAt:  time.Now(),
+		ModifiedAt: time.Now(),
 	}
 	return n
 }

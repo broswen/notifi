@@ -10,11 +10,7 @@ import (
 	"strings"
 )
 
-type Database struct {
-	*pgxpool.Pool
-}
-
-func InitDB(ctx context.Context, dsn string) (*Database, error) {
+func InitDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.Connect(ctx, dsn)
 	if err != nil {
 		return nil, err
@@ -24,7 +20,7 @@ func InitDB(ctx context.Context, dsn string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{pool}, nil
+	return pool, nil
 }
 
 var (

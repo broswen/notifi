@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/destination"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/broswen/notifi/internal/queue/consumer"
+	"github.com/broswen/notifi/internal/repository"
 	"github.com/rs/zerolog/log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -81,6 +85,15 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating kafka consumer")
 	}
 
+	pool, err := db.InitDB(context.Background(), dsn)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating postgres pool")
+	}
+	notificationRepo, err := repository.NewNotificationSqlRepository(pool)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating notification repository")
+	}
+
 	c.HandleFunc(deliveryTopic, func(n entity.Notification) error {
 		var err error
 		if skipDelivery != "" {
@@ -93,9 +106,16 @@ func main() {
 		} else {
 			err = fmt.Errorf("notification missing destination: %s", n.ID)
 			log.Error().Err(err).Str("notification_id", n.ID).Msg("notification missing destination")
+			return err
 		}
 
-		//TODO add postgres producer to store notification result
+		now := time.Now()
+		n.DeletedAt = &now
+		_, err = notificationRepo.Update(context.Background(), n)
+		if err != nil {
+			//TODO add something to prevent frequent delivery retries if the delivery succeeds but database fails to save
+			log.Error().Err(err).Msg("error updating notification")
+		}
 		return err
 	})
 

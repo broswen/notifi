@@ -7,6 +7,10 @@ type Notification struct {
 	Destination Destination `json:"destination"`
 	Content     string      `json:"content"`
 	Schedule    *time.Time  `json:"schedule"`
+	DeletedAt   *time.Time  `json:"deleted_at"`
+	CreatedAt   time.Time   `json:"created_at"`
+	ModifiedAt  time.Time   `json:"modified_at"`
+	DeliveredAt *time.Time  `json:"delivered_at"`
 }
 
 type Destination struct {

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/broswen/notifi/internal/queue/consumer"
 	"github.com/broswen/notifi/internal/queue/producer"
+	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
@@ -64,6 +67,15 @@ func main() {
 	}
 	defer p2.Close()
 
+	pool, err := db.InitDB(context.Background(), dsn)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating postgres pool")
+	}
+	notificationRepo, err := repository.NewNotificationSqlRepository(pool)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating notification repository")
+	}
+
 	eg := errgroup.Group{}
 	m := chi.NewRouter()
 	m.Handle(metricsPath, promhttp.Handler())
@@ -78,11 +90,15 @@ func main() {
 
 	c.HandleFunc(requestTopic, func(n entity.Notification) error {
 		if n.Scheduled() {
-			//TODO add postgres producer to store notifications
-			return p2.Submit(n)
-			return nil
+			//if scheduled, store in postgres
+			_, err := notificationRepo.Save(context.Background(), n)
+			return err
 		} else {
 			//submit to delivery queue if instant notification
+			_, err := notificationRepo.Save(context.Background(), n)
+			if err != nil {
+				return err
+			}
 			return p1.Submit(n)
 		}
 	})
