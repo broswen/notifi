@@ -25,6 +25,10 @@ func main() {
 	if requestTopic == "" {
 		log.Fatal().Msgf("request topic is empty")
 	}
+	scheduledTopic := os.Getenv("SCHEDULED_TOPIC")
+	if scheduledTopic == "" {
+		log.Fatal().Msgf("scheduled topic is empty")
+	}
 	deliveryTopic := os.Getenv("DELIVERY_TOPIC")
 	if deliveryTopic == "" {
 		log.Fatal().Msgf("delivery topic is empty")
@@ -54,7 +58,7 @@ func main() {
 	}
 	defer p1.Close()
 
-	p2, err := producer.NewLogProducer("router", "scheduled")
+	p2, err := producer.NewLogProducer("router", scheduledTopic)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating log producer")
 	}

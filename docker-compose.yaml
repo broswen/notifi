@@ -34,24 +34,32 @@ services:
       BROKERS: broker:9092
       DSN: postgres://postgres:password@postgres:5432/notifi
       REQUEST_TOPIC: notifi-request
+      SCHEDULED_TOPIC: notifi-scheduled
       DELIVERY_TOPIC: notifi-delivery
-#  delivery:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile.delivery
-#    deploy:
-#      mode: replicated
-#      replicas: 2
-#    depends_on:
-#      - broker
-#      - postgres
-#    command: sh -c "
-#      sleep 4 &&
-#      ./bin/router"
-#    environment:
-#      METRICS_PORT: 8081
-#      BROKERS: broker:9092
-#      DSN: postgres://postgres:password@postgres:5432/notifi
+  delivery:
+    build:
+      context: .
+      dockerfile: Dockerfile.delivery
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/delivery"
+    environment:
+      BROKERS: broker:9092
+      DSN: postgres://postgres:password@postgres:5432/notifi
+      DELIVERY_TOPIC: notifi-delivery
+      FROM_NAME: notifi
+      FROM_EMAIL: notifi@broswen.com
+      SENDGRID_KEY: 123
+      TWILIO_SID: abc
+      TWILIO_TOKEN: 123
+      FROM_NUMBER: 18005551234
+      SKIP_DELIVERY: true
   zookeeper:
     image: bitnami/zookeeper:latest
     hostname: zookeeper

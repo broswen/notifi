@@ -56,20 +56,36 @@ func main() {
 		log.Fatal().Msgf("from number is empty")
 	}
 
+	skipDelivery := os.Getenv("SKIP_DELIVERY")
+	if skipDelivery != "" {
+		log.Debug().Str("SKIP_DELIVERY", skipDelivery).Msg("skip delivery mode")
+	}
+
 	email, err := destination.NewEmailDestination(sendGridApiKey, fromName, fromEmail)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating email destination")
 	}
 
 	sms, err := destination.NewSMSDestination(twilioAccountSid, twilioAuthToken, fromNumber)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating sms destination")
+	}
+
+	l, err := destination.NewLogDestination("delivery")
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating log destination")
+	}
 
 	c, err := consumer.NewKafkaConsumer("delivery", "delivery", deliveryTopic, brokers)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating kafka consumer")
 	}
 
-	c.HandleFunc("delivery", func(n entity.Notification) error {
+	c.HandleFunc(deliveryTopic, func(n entity.Notification) error {
 		var err error
+		if skipDelivery != "" {
+			return l.Deliver(n)
+		}
 		if n.Destination.Email != "" {
 			err = email.Deliver(n)
 		} else if n.Destination.SMS != "" {
