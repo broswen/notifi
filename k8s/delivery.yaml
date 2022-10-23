@@ -3,34 +3,33 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: config-delivery
-  namespace: vex
+  name: delivery
+  namespace: notifi
   labels:
     helm.sh/chart: delivery-0.1.0
     app.kubernetes.io/name: delivery
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: delivery
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 data:
-  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
-  FROM_EMAIL: notifi@broswen.com
-  FROM_NAME: notifi
-  FROM_NUMBER: 18005551234
-  SENDGRID_KEY: 123
-  SKIP_DELIVERY: true
-  TWILIO_SID: abc
-  TWILIO_TOKEN: 123
+  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL25vdGlmaQ==
+  FROM_EMAIL: bm90aWZpQGJyb3N3ZW4uY29t
+  FROM_NAME: bm90aWZp
+  FROM_NUMBER: MTgwMDU1NTEyMzQ=
+  SENDGRID_KEY: MTIz
+  TWILIO_SID: YWJj
+  TWILIO_TOKEN: MTIz
 ---
 # Source: delivery/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-delivery
-  namespace: vex
+  name: delivery
+  namespace: notifi
   labels:
     helm.sh/chart: delivery-0.1.0
     app.kubernetes.io/name: delivery
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: delivery
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 data:
@@ -39,16 +38,18 @@ data:
   DELIVERY_TOPIC: notifi-delivery
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
+  SKIP_DELIVERY: true
 ---
 # Source: delivery/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: config-delivery
+  name: delivery
+  namespace: notifi
   labels:
     helm.sh/chart: delivery-0.1.0
     app.kubernetes.io/name: delivery
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: delivery
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -56,7 +57,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: delivery
-      app.kubernetes.io/instance: config
+      app.kubernetes.io/instance: delivery
   template:
     metadata:
       annotations:
@@ -65,7 +66,7 @@ spec:
         prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: delivery
-        app.kubernetes.io/instance: config
+        app.kubernetes.io/instance: delivery
     spec:
       securityContext:
         {}
@@ -77,9 +78,9 @@ spec:
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: config-delivery
+                name: delivery
             - secretRef:
-                name: config-delivery
+                name: delivery
           resources:
             limits:
               cpu: 150m

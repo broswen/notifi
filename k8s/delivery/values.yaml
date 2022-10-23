@@ -1,6 +1,6 @@
 
 replicaCount: 2
-namespace: vex
+namespace: notifi
 
 image:
   repository: broswen/notifi-delivery
@@ -10,14 +10,13 @@ image:
 
 secret:
   data:
-    DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
-    FROM_NAME: notifi
-    FROM_EMAIL: notifi@broswen.com
-    SENDGRID_KEY: 123
-    TWILIO_SID: abc
-    TWILIO_TOKEN: 123
-    FROM_NUMBER: 18005551234
-    SKIP_DELIVERY: true
+    DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL25vdGlmaQ==
+    FROM_NAME: bm90aWZp
+    FROM_EMAIL: bm90aWZpQGJyb3N3ZW4uY29t
+    SENDGRID_KEY: MTIz
+    TWILIO_SID: YWJj
+    TWILIO_TOKEN: MTIz
+    FROM_NUMBER: MTgwMDU1NTEyMzQ=
 
 configmap:
   data:
@@ -26,6 +25,7 @@ configmap:
     METRICS_PATH: "/metrics"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
     DELIVERY_TOPIC: "notifi-delivery"
+    SKIP_DELIVERY: true
 
 imagePullSecrets: []
 nameOverride: ""

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "delivery.fullname" . }}
+  namespace: {{ .Values.namespace }}
   labels:
     {{- include "delivery.labels" . | nindent 4 }}
 spec:

@@ -3,27 +3,27 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: config-api
-  namespace: vex
+  name: api
+  namespace: notifi
   labels:
     helm.sh/chart: api-0.1.0
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 data:
-  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
+  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL25vdGlmaQ==
 ---
 # Source: api/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-api
-  namespace: vex
+  name: api
+  namespace: notifi
   labels:
     helm.sh/chart: api-0.1.0
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 data:
@@ -37,11 +37,12 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: config-api
+  name: api
+  namespace: notifi
   labels:
     helm.sh/chart: api-0.1.0
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -53,17 +54,18 @@ spec:
       name: http
   selector:
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
 ---
 # Source: api/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: config-api
+  name: api
+  namespace: notifi
   labels:
     helm.sh/chart: api-0.1.0
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -71,7 +73,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: api
-      app.kubernetes.io/instance: config
+      app.kubernetes.io/instance: api
   template:
     metadata:
       annotations:
@@ -80,7 +82,7 @@ spec:
         prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: api
-        app.kubernetes.io/instance: config
+        app.kubernetes.io/instance: api
     spec:
       securityContext:
         {}
@@ -92,9 +94,9 @@ spec:
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: config-api
+                name: api
             - secretRef:
-                name: config-api
+                name: api
           ports:
             - name: http
               containerPort: 8080
@@ -123,12 +125,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: config-api
-  namespace: vex
+  name: api
+  namespace: notifi
   labels:
     helm.sh/chart: api-0.1.0
     app.kubernetes.io/name: api
-    app.kubernetes.io/instance: config
+    app.kubernetes.io/instance: api
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -140,6 +142,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: config-api
+                name: api
                 port:
                   number: 8080

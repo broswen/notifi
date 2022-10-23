@@ -1,6 +1,6 @@
 
 replicaCount: 2
-namespace: vex
+namespace: notifi
 
 image:
   repository: broswen/notifi
@@ -10,7 +10,7 @@ image:
 
 secret:
   data:
-    DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
+    DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL25vdGlmaQ==
 
 configmap:
   data:

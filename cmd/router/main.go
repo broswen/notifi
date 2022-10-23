@@ -28,10 +28,6 @@ func main() {
 	if requestTopic == "" {
 		log.Fatal().Msgf("request topic is empty")
 	}
-	scheduledTopic := os.Getenv("SCHEDULED_TOPIC")
-	if scheduledTopic == "" {
-		log.Fatal().Msgf("scheduled topic is empty")
-	}
 	deliveryTopic := os.Getenv("DELIVERY_TOPIC")
 	if deliveryTopic == "" {
 		log.Fatal().Msgf("delivery topic is empty")
@@ -60,12 +56,6 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating kafka producer")
 	}
 	defer p1.Close()
-
-	p2, err := producer.NewLogProducer("router", scheduledTopic)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error creating log producer")
-	}
-	defer p2.Close()
 
 	pool, err := db.InitDB(context.Background(), dsn)
 	if err != nil {

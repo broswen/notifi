@@ -16,10 +16,10 @@ publish: build
 	docker push broswen/notifi-poller:latest
 
 helm-template:
-	helm template config k8s/api > k8s/api.yaml
-	helm template config k8s/router > k8s/router.yaml
-	helm template config k8s/delivery > k8s/delivery.yaml
-	helm template config k8s/poller > k8s/poller.yaml
+	helm template api k8s/api > k8s/api.yaml
+	helm template router k8s/router > k8s/router.yaml
+	helm template delivery k8s/delivery > k8s/delivery.yaml
+	helm template poller k8s/poller > k8s/poller.yaml
 
 test: helm-template
 	go test ./...
