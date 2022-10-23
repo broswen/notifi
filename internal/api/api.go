@@ -36,9 +36,9 @@ func (api *API) Router() http.Handler {
 		writeOK(w, http.StatusOK, "OK")
 	})
 
-	r.Post("/api/notification", api.HandleCreateNotification())
-	r.Get("/api/notification/{notificationId}", api.HandleGetNotification())
-	r.Delete("/api/notification/{notificationId}", api.HandleDeleteNotification())
+	r.Post("/api/notifications", api.HandleCreateNotification())
+	r.Get("/api/notifications/{notificationId}", api.HandleGetNotification())
+	r.Delete("/api/notifications/{notificationId}", api.HandleDeleteNotification())
 
 	return r
 }

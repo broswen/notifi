@@ -25,7 +25,7 @@ configmap:
     METRICS_PATH: "/metrics"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
     DELIVERY_TOPIC: "notifi-delivery"
-    SKIP_DELIVERY: true
+    SKIP_DELIVERY: "true"
 
 imagePullSecrets: []
 nameOverride: ""
