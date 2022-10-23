@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/broswen/notifi/internal/api"
+	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/queue/producer"
+	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
@@ -48,6 +50,15 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating kafka producer")
 	}
 
+	pool, err := db.InitDB(context.Background(), dsn)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating postgres pool")
+	}
+	notificationRepo, err := repository.NewNotificationSqlRepository(pool)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating notification repository")
+	}
+
 	eg := errgroup.Group{}
 
 	m := chi.NewRouter()
@@ -62,7 +73,8 @@ func main() {
 	})
 
 	app := api.API{
-		Producer: p1,
+		Producer:     p1,
+		Notification: notificationRepo,
 	}
 	publicServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", apiPort),

@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/broswen/notifi/internal/queue/producer"
+	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -9,7 +10,8 @@ import (
 )
 
 type API struct {
-	Producer producer.Producer
+	Producer     producer.Producer
+	Notification repository.NotificationRepository
 }
 
 func (api *API) Router() http.Handler {
@@ -34,7 +36,9 @@ func (api *API) Router() http.Handler {
 		writeOK(w, http.StatusOK, "OK")
 	})
 
-	r.Post("/", api.HandleCreateNotification())
+	r.Post("/api/notification", api.HandleCreateNotification())
+	r.Get("/api/notification/{notificationId}", api.HandleGetNotification())
+	r.Delete("/api/notification/{notificationId}", api.HandleDeleteNotification())
 
 	return r
 }

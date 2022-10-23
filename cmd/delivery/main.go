@@ -97,20 +97,22 @@ func main() {
 	c.HandleFunc(deliveryTopic, func(n entity.Notification) error {
 		var err error
 		if skipDelivery != "" {
-			return l.Deliver(n)
-		}
-		if n.Destination.Email != "" {
-			err = email.Deliver(n)
-		} else if n.Destination.SMS != "" {
-			err = sms.Deliver(n)
+			err = l.Deliver(n)
 		} else {
-			err = fmt.Errorf("notification missing destination: %s", n.ID)
-			log.Error().Err(err).Str("notification_id", n.ID).Msg("notification missing destination")
+			if n.Destination.Email != "" {
+				err = email.Deliver(n)
+			} else if n.Destination.SMS != "" {
+				err = sms.Deliver(n)
+			} else {
+				err = fmt.Errorf("notification missing destination: %s", n.ID)
+				log.Error().Err(err).Str("notification_id", n.ID).Msg("notification missing destination")
+			}
+			log.Error().Err(err).Str("notification_id", n.ID).Msg("notification delivery error")
 			return err
 		}
 
 		now := time.Now()
-		n.DeletedAt = &now
+		n.DeliveredAt = &now
 		_, err = notificationRepo.Update(context.Background(), n)
 		if err != nil {
 			//TODO add something to prevent frequent delivery retries if the delivery succeeds but database fails to save
