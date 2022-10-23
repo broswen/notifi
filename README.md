@@ -5,7 +5,7 @@
 
 
 ### todo
-- [ ] custom errors 
+- [x] custom errors 
 - [ ] api response types, entity -> response
 - [x] poll postgres for scheduled notifications and submit to delivery queue
   - [ ] figure out how to partition/shard db polling for scaling (random number column with consistent hashing?)
@@ -13,5 +13,5 @@
 - [ ] add api service tokens, count messages per token in metrics
   - [ ] admin endpoints to manage create service tokens
 - [x] add prometheus metrics
-- [ ] set up k8s
+- [x] set up k8s
 - [ ] add tests

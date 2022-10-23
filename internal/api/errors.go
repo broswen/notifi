@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/broswen/notifi/internal/repository"
 	"net/http"
 )
 
@@ -40,16 +41,10 @@ func NewAPIError(status, code int, message string) *APIError {
 func translateError(err error) *APIError {
 	switch err.(type) {
 	//TODO add new errors into their respective groups
-	//case account.ErrAccountNotFound,
-	//	project.ErrProjectNotFound,
-	//	flag.ErrFlagNotFound:
-	//	return ErrNotFound
-	//case account.ErrInvalidData,
-	//	project.ErrInvalidData,
-	//	flag.ErrInvalidData:
-	//	return ErrBadRequest.WithError(err)
-	//case flag.ErrKeyNotUnique:
-	//	return ErrBadRequest.WithError(err)
+	case repository.ErrNotificationNotFound:
+		return ErrNotFound
+	case repository.ErrInvalidData:
+		return ErrBadRequest.WithError(err)
 	default:
 		return ErrUnknown
 	}
