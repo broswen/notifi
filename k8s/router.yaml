@@ -1,0 +1,83 @@
+---
+# Source: router/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: config-router
+  namespace: vex
+  labels:
+    helm.sh/chart: router-0.1.0
+    app.kubernetes.io/name: router
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
+---
+# Source: router/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-router
+  namespace: vex
+  labels:
+    helm.sh/chart: router-0.1.0
+    app.kubernetes.io/name: router
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  API_PORT: "8080"
+  BROKERS: kafka-clusterip.kafka.svc.cluster.local:9092
+  DELIVERY_TOPIC: notifi-delivery
+  METRICS_PATH: /metrics
+  METRICS_PORT: "8081"
+  REQUEST_TOPIC: notifi-request
+---
+# Source: router/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-router
+  labels:
+    helm.sh/chart: router-0.1.0
+    app.kubernetes.io/name: router
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: router
+      app.kubernetes.io/instance: config
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8081"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: router
+        app.kubernetes.io/instance: config
+    spec:
+      securityContext:
+        {}
+      containers:
+        - name: router
+          securityContext:
+            {}
+          image: "broswen/notifi-router:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: config-router
+            - secretRef:
+                name: config-router
+          resources:
+            limits:
+              cpu: 150m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

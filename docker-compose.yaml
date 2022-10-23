@@ -31,7 +31,6 @@ services:
       BROKERS: broker:9092
       DSN: postgres://postgres:password@postgres:5432/notifi
       REQUEST_TOPIC: notifi-request
-      SCHEDULED_TOPIC: notifi-scheduled
       DELIVERY_TOPIC: notifi-delivery
   delivery:
     build:

@@ -1,0 +1,83 @@
+---
+# Source: poller/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: config-poller
+  namespace: vex
+  labels:
+    helm.sh/chart: poller-0.1.0
+    app.kubernetes.io/name: poller
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
+---
+# Source: poller/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-poller
+  namespace: vex
+  labels:
+    helm.sh/chart: poller-0.1.0
+    app.kubernetes.io/name: poller
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  API_PORT: "8080"
+  BROKERS: kafka-clusterip.kafka.svc.cluster.local:9092
+  DELIVERY_TOPIC: notifi-delivery
+  METRICS_PATH: /metrics
+  METRICS_PORT: "8081"
+  POLL_INTERVAL: 1m
+---
+# Source: poller/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-poller
+  labels:
+    helm.sh/chart: poller-0.1.0
+    app.kubernetes.io/name: poller
+    app.kubernetes.io/instance: config
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: poller
+      app.kubernetes.io/instance: config
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8081"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: poller
+        app.kubernetes.io/instance: config
+    spec:
+      securityContext:
+        {}
+      containers:
+        - name: poller
+          securityContext:
+            {}
+          image: "broswen/notifi-poller:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: config-poller
+            - secretRef:
+                name: config-poller
+          resources:
+            limits:
+              cpu: 150m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
