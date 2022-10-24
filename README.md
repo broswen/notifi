@@ -11,7 +11,7 @@
   - [ ] figure out how to partition/shard db polling for scaling (random number column with consistent hashing?)
 - [ ] prevent spam when db is down and notification is sent successfully
 - [ ] add api service tokens, count messages per token in metrics
-  - [ ] admin endpoints to manage create service tokens
+  - [ ] do this through cloudflare access service tokens
 - [x] add prometheus metrics
 - [x] set up k8s
 - [ ] add tests
