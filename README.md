@@ -14,4 +14,4 @@
   - [ ] do this through cloudflare access service tokens
 - [x] add prometheus metrics
 - [x] set up k8s
-- [ ] add tests
+- [x] add tests
