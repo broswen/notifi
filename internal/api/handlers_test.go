@@ -20,9 +20,9 @@ func TestHandleCreateNotification_Valid(t *testing.T) {
     "content": "test message"
 }`
 
-	m := producer.MockProducer{}
+	m := &producer.MockProducer{}
 	m.On("Submit", mock.Anything).Return(nil)
-	r := repository.MockRepository{}
+	r := &repository.MockRepository{}
 	app := API{
 		Producer:     m,
 		Notification: r,
@@ -42,9 +42,9 @@ func TestHandleCreateNotification_InvalidDestination(t *testing.T) {
     "content": "test message"
 }`
 
-	m := producer.MockProducer{}
+	m := &producer.MockProducer{}
 	m.On("Submit", mock.Anything).Return(nil)
-	r := repository.MockRepository{}
+	r := &repository.MockRepository{}
 	app := API{
 		Producer:     m,
 		Notification: r,
@@ -59,8 +59,8 @@ func TestHandleCreateNotification_InvalidDestination(t *testing.T) {
 }
 
 func TestHandleGetNotification(t *testing.T) {
-	m := producer.MockProducer{}
-	r := repository.MockRepository{}
+	m := &producer.MockProducer{}
+	r := &repository.MockRepository{}
 	r.On("Get", mock.Anything, "2GYpi7DgQR2Jdm6zWVEtD6c78Jl").Return(entity.Notification{
 		ID: "2GYpi7DgQR2Jdm6zWVEtD6c78Jl",
 		Destination: entity.Destination{
