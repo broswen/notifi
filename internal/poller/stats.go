@@ -1,4 +1,4 @@
-package main
+package poller
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

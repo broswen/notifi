@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/stretchr/testify/mock"
+	"time"
 )
 
 type MockRepository struct {
@@ -17,6 +18,11 @@ func (m MockRepository) Get(ctx context.Context, id string) (entity.Notification
 
 func (m MockRepository) List(ctx context.Context, offset, limit int64) ([]entity.Notification, error) {
 	args := m.Called(ctx, offset, limit)
+	return args.Get(0).([]entity.Notification), args.Error(1)
+}
+
+func (m MockRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
+	args := m.Called(ctx, period, offset, limit)
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 

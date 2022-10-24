@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/broswen/notifi/internal/db"
+	poller2 "github.com/broswen/notifi/internal/poller"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
@@ -64,58 +65,13 @@ func main() {
 	}
 	eg := errgroup.Group{}
 
-	ticker := time.NewTicker(interval)
 	ctx, cancel := context.WithCancel(context.Background())
-
-	//notifications can be delivered up to 5 minutes early
 	pollPeriod := time.Minute * 5
 	pollLimit := int64(100)
-	//every pollInterval, query db for undelivered, undeleted, scheduled notifications that are due within the next pollPeriod
-	//	we can't query the db for all items, we should set a reasonable query limit
-	//	if we receive the limit, we should keep querying until we don't
-
-	//submit each notification to the delivery queue
-	//	we might resubmit notifications if
+	poller := poller2.NewScheduledNotificationPoller(scheduledRepo, p, interval, pollPeriod, pollLimit)
 
 	eg.Go(func() error {
-		//this should be abstracted out
-		for {
-			select {
-			case <-ticker.C:
-				extras := true
-				offset := int64(0)
-				for extras {
-					log.Debug().Str("interval", interval.String()).Int64("limit", pollLimit).Msg("polling for scheduled messages")
-					//TODO add notification partition key? for polling so we can scale the poller
-					notifications, err := scheduledRepo.ListScheduled(ctx, pollPeriod, offset, pollLimit)
-					if err != nil {
-						log.Error().Err(err).Msg("error listing scheduled notifications")
-						PollErrors.Inc()
-						break
-					}
-					//continue loop if we received a full amount
-					//offset next query
-					extras = int64(len(notifications)) == pollLimit
-					offset += pollLimit
-
-					PollNotifications.Add(float64(len(notifications)))
-					for _, n := range notifications {
-						//TODO mark in-progress to avoid resubmitting during another poll
-						log.Debug().Str("notification_id", n.ID).Time("schedule", *n.Schedule).Msg("submitting scheduled notification")
-						err = p.Submit(n)
-						if err != nil {
-							log.Error().Err(err).Str("notification_id", n.ID).Msg("error submitting scheduled notification")
-							continue
-						}
-					}
-				}
-
-				SuccessfulPoll.Inc()
-			case <-ctx.Done():
-				log.Debug().Msg("context cancelled")
-				return nil
-			}
-		}
+		return poller.Poll(ctx)
 	})
 
 	m := chi.NewRouter()
