@@ -86,6 +86,7 @@ func main() {
 				offset := int64(0)
 				for extras {
 					log.Debug().Str("interval", interval.String()).Int64("limit", pollLimit).Msg("polling for scheduled messages")
+					//TODO add notification partition key? for polling so we can scale the poller
 					notifications, err := scheduledRepo.ListScheduled(ctx, pollPeriod, offset, pollLimit)
 					if err != nil {
 						log.Error().Err(err).Msg("error listing scheduled notifications")

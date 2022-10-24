@@ -111,6 +111,8 @@ func main() {
 	c.HandleFunc(deliveryTopic, func(n entity.Notification) error {
 		var err error
 		if skipDelivery != "" {
+			//artificial delay to mimic network request
+			time.Sleep(time.Millisecond * 300)
 			err = l.Deliver(n)
 		} else {
 			if n.Destination.Email != "" {
@@ -131,6 +133,7 @@ func main() {
 		if err != nil {
 			//TODO add something to prevent frequent delivery retries if the delivery succeeds but database fails to save
 			log.Error().Err(err).Msg("error updating notification")
+			return err
 		}
 		if !n.Scheduled() {
 			//DeliveryDelay is the time from creation to delivery for instant notifications
@@ -140,7 +143,7 @@ func main() {
 			//a negative value means it was delivered early
 			ScheduledOffset.Observe(float64(n.DeliveredAt.Sub(*n.Schedule)))
 		}
-		return err
+		return nil
 	})
 
 	err = c.Consume()

@@ -43,8 +43,10 @@ func (nr *NotificationRequest) Validate() error {
 }
 
 func (nr NotificationRequest) IntoEntity() entity.Notification {
+	k := ksuid.New()
+	//TODO calculate partition key here?
 	n := entity.Notification{
-		ID: ksuid.New().String(),
+		ID: k.String(),
 		Destination: entity.Destination{
 			Email: nr.Email,
 			SMS:   nr.SMS,
