@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+
 	"github.com/broswen/notifi/internal/api"
 	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/queue/producer"
@@ -11,9 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
-	"net/http"
-	"os"
-	"os/signal"
 )
 
 func main() {
@@ -34,6 +35,11 @@ func main() {
 	if dsn == "" {
 		log.Fatal().Msgf("postgres DSN is empty")
 	}
+
+	//Cloudflare Access Application policy AUD
+	policyAUD := os.Getenv("POLICY_AUD")
+	//Cloudflare Access team domain <team>.cloudflareaccess.com
+	teamDomain := os.Getenv("TEAM_DOMAIN")
 
 	metricsPort := os.Getenv("METRICS_PORT")
 	if metricsPort == "" {
@@ -76,9 +82,11 @@ func main() {
 		Producer:     p1,
 		Notification: notificationRepo,
 	}
+
+	accessClient := api.NewAccessClient(teamDomain, policyAUD)
 	publicServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", apiPort),
-		Handler: app.Router(),
+		Handler: app.Router(accessClient),
 	}
 	eg.Go(func() error {
 		log.Debug().Msgf("public api listening on :%s", apiPort)

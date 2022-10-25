@@ -19,6 +19,8 @@ configmap:
     METRICS_PATH: "/metrics"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
     REQUEST_TOPIC: "notifi-request"
+    TEAM_DOMAIN: <cloudflare access team domain>
+    POLICY_AUD: <cloudflare access app policy aud>
 
 imagePullSecrets: []
 nameOverride: ""

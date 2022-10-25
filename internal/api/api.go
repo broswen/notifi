@@ -1,12 +1,13 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"net/http"
 )
 
 type API struct {
@@ -14,7 +15,7 @@ type API struct {
 	Notification repository.NotificationRepository
 }
 
-func (api *API) Router() http.Handler {
+func (api *API) Router(accessClient AccessClient) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Logger)
@@ -36,9 +37,14 @@ func (api *API) Router() http.Handler {
 		writeOK(w, http.StatusOK, "OK")
 	})
 
-	r.Post("/api/notifications", api.HandleCreateNotification())
-	r.Get("/api/notifications/{notificationId}", api.HandleGetNotification())
-	r.Delete("/api/notifications/{notificationId}", api.HandleDeleteNotification())
+	r.Route("/api", func(r chi.Router) {
+		r.Use(CloudflareAccessVerifier(accessClient))
+		r.Use(CloudflareAccessIdentityLogger(accessClient))
+		r.Post("/api/notifications", api.HandleCreateNotification())
+		r.Get("/api/notifications/{notificationId}", api.HandleGetNotification())
+		r.Delete("/api/notifications/{notificationId}", api.HandleDeleteNotification())
+
+	})
 
 	return r
 }
