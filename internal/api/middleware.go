@@ -22,13 +22,14 @@ type AccessIdentity struct {
 	UserUUID           string `json:"user_uuid"`
 	AccountID          string `json:"account_id"`
 	ServiceTokenID     string `json:"service_token_id"`
-	ServiceTokenStatus string `json:"service_token_status"`
+	ServiceTokenStatus bool   `json:"service_token_status"`
 }
 
 type AccessClient struct {
 	verifier   *oidc.IDTokenVerifier
 	httpClient *http.Client
 	domain     string
+	policyAud  string
 }
 
 func (a AccessClient) Verify(ctx context.Context, jwt string) (*oidc.IDToken, error) {
@@ -36,7 +37,7 @@ func (a AccessClient) Verify(ctx context.Context, jwt string) (*oidc.IDToken, er
 }
 
 func (a AccessClient) GetIdentity(ctx context.Context, cfAuthorization *http.Cookie) (*AccessIdentity, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", a.domain, AccessIdentityPath), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://%s%s", a.domain, AccessIdentityPath), nil)
 	if err != nil {
 		log.Error().Err(err).Msg("creating access identity request")
 		return nil, err
@@ -48,7 +49,13 @@ func (a AccessClient) GetIdentity(ctx context.Context, cfAuthorization *http.Coo
 		return nil, err
 	}
 	if res.StatusCode >= http.StatusBadRequest {
-		log.Error().Str("status", res.Status).Int("code", res.StatusCode).Msg("received access identity request")
+		e := struct {
+			Error string `json:"err"`
+		}{}
+		err = json.NewDecoder(res.Body).Decode(&e)
+		if err == nil {
+			log.Error().Str("status", res.Status).Int("code", res.StatusCode).Str("err", e.Error).Msg("received access identity request")
+		}
 		return nil, fmt.Errorf("get access identity: %d %s", res.StatusCode, res.Status)
 	}
 	identity := &AccessIdentity{}
@@ -61,22 +68,37 @@ func (a AccessClient) GetIdentity(ctx context.Context, cfAuthorization *http.Coo
 }
 
 func NewAccessClient(teamDomain, policyAUD string) AccessClient {
-	certsURL := fmt.Sprintf("%s%s", teamDomain, AccessCertsPath)
+	certsURL := fmt.Sprintf("https://%s%s", teamDomain, AccessCertsPath)
 
 	config := &oidc.Config{
 		ClientID: policyAUD,
 	}
 	keySet := oidc.NewRemoteKeySet(context.Background(), certsURL)
-	verifier := oidc.NewVerifier(teamDomain, keySet, config)
+	verifier := oidc.NewVerifier(fmt.Sprintf("https://%s", teamDomain), keySet, config)
 
+	if policyAUD == "" && teamDomain == "" {
+		log.Debug().Msg("no cloudflare access policy aud set, skipping authentication")
+	} else {
+		log.Debug().Str("team_domain", teamDomain).Str("policy_aud", policyAUD).Msg("cloudflare access configured")
+
+	}
 	return AccessClient{
 		verifier:   verifier,
 		httpClient: &http.Client{Timeout: time.Second * 3},
 		domain:     teamDomain,
+		policyAud:  policyAUD,
 	}
 }
 
 func CloudflareAccessVerifier(client AccessClient) func(next http.Handler) http.Handler {
+	if client.policyAud == "" && client.domain == "" {
+		return func(next http.Handler) http.Handler {
+			fn := func(w http.ResponseWriter, r *http.Request) {
+				next.ServeHTTP(w, r)
+			}
+			return http.HandlerFunc(fn)
+		}
+	}
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -85,8 +107,7 @@ func CloudflareAccessVerifier(client AccessClient) func(next http.Handler) http.
 			//  Could also look in the cookies for CF_AUTHORIZATION
 			accessJWT := r.Header.Get("Cf-Access-Jwt-Assertion")
 			if accessJWT == "" {
-				log.Debug().Msg("couldn't get authorization token")
-				log.Debug().Str("accessJWT", accessJWT).Msg("")
+				log.Debug().Str("jwt", accessJWT).Msg("couldn't get authorization token")
 				writeErr(w, nil, ErrUnauthorized)
 				return
 			}
@@ -98,30 +119,6 @@ func CloudflareAccessVerifier(client AccessClient) func(next http.Handler) http.
 				writeErr(w, nil, ErrUnauthorized)
 				return
 			}
-			next.ServeHTTP(w, r)
-		}
-		return http.HandlerFunc(fn)
-	}
-}
-
-func CloudflareAccessIdentityLogger(client AccessClient) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			cfAuthorization, err := r.Cookie(AccessCookieName)
-			if err != nil {
-				log.Warn().Err(err).Msg("no CF_Authorization cookie found")
-				next.ServeHTTP(w, r)
-				return
-			}
-			identity, err := client.GetIdentity(r.Context(), cfAuthorization)
-			log.Debug().
-				Str("service_token_id", identity.ServiceTokenID).
-				Str("account_id", identity.AccountID).
-				Str("user_uuid", identity.UserUUID).
-				Str("email", identity.Email).
-				Str("method", r.Method).
-				Str("path", r.URL.Path).
-				Msg("access identity")
 			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)

@@ -39,11 +39,9 @@ func (api *API) Router(accessClient AccessClient) http.Handler {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(CloudflareAccessVerifier(accessClient))
-		r.Use(CloudflareAccessIdentityLogger(accessClient))
-		r.Post("/api/notifications", api.HandleCreateNotification())
-		r.Get("/api/notifications/{notificationId}", api.HandleGetNotification())
-		r.Delete("/api/notifications/{notificationId}", api.HandleDeleteNotification())
-
+		r.Post("/notifications", api.HandleCreateNotification())
+		r.Get("/notifications/{notificationId}", api.HandleGetNotification())
+		r.Delete("/notifications/{notificationId}", api.HandleDeleteNotification())
 	})
 
 	return r
