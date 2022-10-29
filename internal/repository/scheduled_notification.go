@@ -25,7 +25,6 @@ func NewScheduledNotificationSqlRepository(pool *pgxpool.Pool) (ScheduledNotific
 func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
 	//p is the maximum time we are willing to send notifications early
 	p := time.Now().Add(period)
-	//TODO verify proper filtering order with compound index
 	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at from notification 
 		where delivered_at is null
 		and deleted_at is null 

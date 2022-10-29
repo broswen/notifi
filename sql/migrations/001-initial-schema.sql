@@ -10,7 +10,7 @@ create table notification (
     delivered_at timestamptz
 );
 
-create index if not exists notification_schedule on notification(schedule, delivered_at, deleted_at);
+create index if not exists notification_schedule on notification(delivered_at, deleted_at, schedule);
 
 create or replace function update_modified_on() returns trigger as $$
 begin

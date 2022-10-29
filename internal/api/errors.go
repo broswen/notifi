@@ -40,7 +40,6 @@ func NewAPIError(status, code int, message string) *APIError {
 
 func translateError(err error) *APIError {
 	switch err.(type) {
-	//TODO add new errors into their respective groups
 	case repository.ErrNotificationNotFound:
 		return ErrNotFound
 	case repository.ErrInvalidData:
