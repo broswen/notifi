@@ -109,7 +109,11 @@ func main() {
 	}
 
 	c.HandleFunc(deliveryTopic, func(n entity.Notification) error {
-		var err error
+		//check DB is up before trying to deliver messages
+		err := notificationRepo.Ping(context.Background())
+		if err != nil {
+			return err
+		}
 		if skipDelivery != "" {
 			//artificial delay to mimic network request
 			time.Sleep(time.Millisecond * 300)

@@ -9,7 +9,7 @@ type MockDestination struct {
 	mock.Mock
 }
 
-func (m MockDestination) Deliver(notification entity.Notification) error {
+func (m *MockDestination) Deliver(notification entity.Notification) error {
 	args := m.Called(notification)
 	return args.Error(0)
 }

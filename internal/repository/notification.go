@@ -13,19 +13,24 @@ type NotificationRepository interface {
 	Update(ctx context.Context, n entity.Notification) (entity.Notification, error)
 	Delete(ctx context.Context, id string) (entity.Notification, error)
 	List(ctx context.Context, offset, limit int64) ([]entity.Notification, error)
+	Ping(ctx context.Context) error
 }
 
 type NotificationSqlRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewNotificationSqlRepository(pool *pgxpool.Pool) (NotificationSqlRepository, error) {
-	return NotificationSqlRepository{
+func NewNotificationSqlRepository(pool *pgxpool.Pool) (*NotificationSqlRepository, error) {
+	return &NotificationSqlRepository{
 		pool: pool,
 	}, nil
 }
 
-func (r NotificationSqlRepository) Get(ctx context.Context, id string) (entity.Notification, error) {
+func (r *NotificationSqlRepository) Ping(ctx context.Context) error {
+	return r.pool.Ping(ctx)
+}
+
+func (r *NotificationSqlRepository) Get(ctx context.Context, id string) (entity.Notification, error) {
 	n := entity.Notification{
 		Destination: entity.Destination{},
 	}
@@ -46,7 +51,7 @@ func (r NotificationSqlRepository) Get(ctx context.Context, id string) (entity.N
 	return n, nil
 }
 
-func (r NotificationSqlRepository) List(ctx context.Context, offset, limit int64) ([]entity.Notification, error) {
+func (r *NotificationSqlRepository) List(ctx context.Context, offset, limit int64) ([]entity.Notification, error) {
 	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at from notification where deleted_at is null offset $1 limit $2;`, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
@@ -69,7 +74,7 @@ func (r NotificationSqlRepository) List(ctx context.Context, offset, limit int64
 	return notifications, err
 }
 
-func (r NotificationSqlRepository) Save(ctx context.Context, n entity.Notification) (entity.Notification, error) {
+func (r *NotificationSqlRepository) Save(ctx context.Context, n entity.Notification) (entity.Notification, error) {
 	savedNotification := entity.Notification{
 		Destination: entity.Destination{},
 	}
@@ -90,7 +95,7 @@ func (r NotificationSqlRepository) Save(ctx context.Context, n entity.Notificati
 	return savedNotification, nil
 }
 
-func (r NotificationSqlRepository) Update(ctx context.Context, n entity.Notification) (entity.Notification, error) {
+func (r *NotificationSqlRepository) Update(ctx context.Context, n entity.Notification) (entity.Notification, error) {
 	updatedNotification := entity.Notification{
 		Destination: entity.Destination{},
 	}
@@ -111,7 +116,7 @@ func (r NotificationSqlRepository) Update(ctx context.Context, n entity.Notifica
 	return updatedNotification, nil
 }
 
-func (r NotificationSqlRepository) Delete(ctx context.Context, id string) (entity.Notification, error) {
+func (r *NotificationSqlRepository) Delete(ctx context.Context, id string) (entity.Notification, error) {
 	n := entity.Notification{
 		Destination: entity.Destination{},
 	}

@@ -28,6 +28,7 @@ func TestSubmit(t *testing.T) {
 	pr.On("Submit", n).Return(nil)
 	err := p.Submit(context.Background(), n)
 	assert.NoError(t, err)
+	pr.AssertExpectations(t)
 }
 
 func TestPoll(t *testing.T) {
@@ -43,11 +44,11 @@ func TestPoll(t *testing.T) {
 	}
 	//TODO this doesn't really align with how the concrete implementation works
 	p := NewScheduledNotificationPoller(r, pr, time.Second, time.Minute*5, int64(10))
-	r.On("ListScheduled", mock.Anything, time.Minute*5, int64(0), int64(10)).Return([]entity.Notification{n}, nil)
+	r.On("ListScheduled", mock.Anything, time.Minute*5, int64(0), int64(10)).Return([]entity.Notification{n, n}, nil)
 	pr.On("Submit", n).Return(nil)
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
-	err := p.Poll(ctx)
-	assert.NoError(t, err)
+	p.poll(ctx)
 	r.AssertExpectations(t)
 	pr.AssertExpectations(t)
+	pr.AssertNumberOfCalls(t, "Submit", 2)
 }
