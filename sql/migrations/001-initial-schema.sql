@@ -1,5 +1,6 @@
 create table notification (
     id text not null primary key,
+    partition int not null default floor(random() * 100)::int,
     email_destination text not null,
     sms_destination text not null,
     content text,
@@ -11,6 +12,7 @@ create table notification (
 );
 
 create index if not exists notification_schedule on notification(delivered_at, deleted_at, schedule);
+create index if not exists notification_partition on notification(partition);
 
 create or replace function update_modified_on() returns trigger as $$
 begin

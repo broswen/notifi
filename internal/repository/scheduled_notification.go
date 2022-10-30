@@ -9,7 +9,7 @@ import (
 )
 
 type ScheduledNotificationRepository interface {
-	ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error)
+	ListScheduled(ctx context.Context, period time.Duration, partition, offset, limit int64) ([]entity.Notification, error)
 }
 
 type ScheduledNotificationSqlRepository struct {
@@ -22,16 +22,17 @@ func NewScheduledNotificationSqlRepository(pool *pgxpool.Pool) (ScheduledNotific
 	}, nil
 }
 
-func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
+func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, partition, offset, limit int64) ([]entity.Notification, error) {
 	//p is the maximum time we are willing to send notifications early
 	p := time.Now().Add(period)
-	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at from notification 
-		where delivered_at is null
+	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, partition from notification 
+		where partition = $1
+		and delivered_at is null
 		and deleted_at is null 
 		and schedule is not null
-		and schedule < $1
+		and schedule < $2
 		order by schedule asc
-		offset $2 limit $3;`, p, offset, limit)
+		offset $3 limit $4;`, partition, p, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
 		return nil, err
@@ -41,7 +42,7 @@ func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, p
 	notifications := make([]entity.Notification, 0)
 	for rows.Next() {
 		n := entity.Notification{}
-		err = rows.Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt)
+		err = rows.Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.Partition)
 		if err != nil {
 			return notifications, err
 		}
