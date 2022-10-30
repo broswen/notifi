@@ -45,3 +45,8 @@ func (m *MockRepository) Delete(ctx context.Context, id string) (entity.Notifica
 	args := m.Called(ctx, id)
 	return args.Get(0).(entity.Notification), args.Error(1)
 }
+
+func (m *MockRepository) MarkSubmitted(ctx context.Context, id string) (entity.Notification, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(entity.Notification), args.Error(1)
+}

@@ -66,10 +66,10 @@ func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
 		extras = int64(len(notifications)) == p.pollLimit
 		offset += p.pollLimit
 		for _, n := range notifications {
-			//TODO mark in-progress to avoid resubmitting during another poll
 			err := p.Submit(ctx, n)
 			if err != nil {
 				log.Error().Err(err).Str("notification_id", n.ID).Msg("error submitting notification")
+				continue
 			}
 		}
 		SuccessfulPoll.Inc()
@@ -78,5 +78,16 @@ func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
 
 func (p *ScheduledNotificationPoller) Submit(ctx context.Context, n entity.Notification) error {
 	log.Debug().Str("notification_id", n.ID).Time("schedule", *n.Schedule).Msg("submitting scheduled notification")
-	return p.Producer.Submit(n)
+	err := p.Producer.Submit(n)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	n.SubmittedAt = &now
+	_, err = p.Notification.MarkSubmitted(ctx, n.ID)
+	if err != nil {
+		log.Error().Err(err).Str("notification_id", n.ID).Msg("error marking notification as submitted")
+		return err
+	}
+	return nil
 }

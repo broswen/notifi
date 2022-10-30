@@ -7,7 +7,8 @@ create table notification (
     created_at timestamptz not null default now(),
     modified_at timestamptz not null default now(),
     deleted_at timestamptz,
-    delivered_at timestamptz
+    delivered_at timestamptz,
+    submitted_at timestamptz
 );
 
 create index if not exists notification_schedule on notification(delivered_at, deleted_at, schedule);

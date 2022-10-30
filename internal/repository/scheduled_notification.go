@@ -9,6 +9,7 @@ import (
 )
 
 type ScheduledNotificationRepository interface {
+	MarkSubmitted(ctx context.Context, id string) (entity.Notification, error)
 	ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error)
 }
 
@@ -17,17 +18,19 @@ type ScheduledNotificationSqlRepository struct {
 }
 
 func NewScheduledNotificationSqlRepository(pool *pgxpool.Pool) (ScheduledNotificationRepository, error) {
-	return ScheduledNotificationSqlRepository{
+	return &ScheduledNotificationSqlRepository{
 		pool: pool,
 	}, nil
 }
 
-func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
+func (r *ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
 	//p is the maximum time we are willing to send notifications early
 	p := time.Now().Add(period)
 	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at from notification 
 		where delivered_at is null
 		and deleted_at is null 
+-- 		only submit if it hasn't been submitted or the previous submission was over 5 minutes ago
+		and (submitted_at is null or submitted_at < (now() - interval '5 min'))
 		and schedule is not null
 		and schedule < $1
 		order by schedule asc
@@ -51,4 +54,26 @@ func (r ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, p
 		return notifications, err
 	}
 	return notifications, err
+}
+
+func (r *ScheduledNotificationSqlRepository) MarkSubmitted(ctx context.Context, id string) (entity.Notification, error) {
+	un := entity.Notification{
+		Destination: entity.Destination{},
+	}
+	err := db.PgError(r.pool.QueryRow(ctx, `update notification set submitted_at = now() where id = $1 returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at;`,
+		id).
+		Scan(&un.ID, &un.Destination.Email, &un.Destination.SMS, &un.Content, &un.Schedule, &un.DeletedAt, &un.CreatedAt, &un.ModifiedAt, &un.DeliveredAt, &un.SubmittedAt))
+
+	if err != nil {
+		switch err {
+		case db.ErrNotFound:
+			return un, ErrNotificationNotFound{err.Error()}
+		case db.ErrInvalidData:
+			return un, ErrInvalidData{err.Error()}
+		default:
+			return un, ErrUnknown{err}
+		}
+	}
+
+	return un, nil
 }
