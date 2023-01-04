@@ -17,3 +17,4 @@
 - [x] add prometheus metrics
 - [x] set up k8s
 - [x] add tests
+- [ ] schemas for all events in protobuf
