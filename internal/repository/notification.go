@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/entity"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -12,7 +13,7 @@ type NotificationRepository interface {
 	Save(ctx context.Context, n entity.Notification) (entity.Notification, error)
 	Update(ctx context.Context, n entity.Notification) (entity.Notification, error)
 	Delete(ctx context.Context, id string) (entity.Notification, error)
-	List(ctx context.Context, offset, limit int64) ([]entity.Notification, error)
+	List(ctx context.Context, deleted bool, offset, limit int64) ([]entity.Notification, error)
 	Ping(ctx context.Context) error
 }
 
@@ -51,8 +52,14 @@ func (r *NotificationSqlRepository) Get(ctx context.Context, id string) (entity.
 	return n, nil
 }
 
-func (r *NotificationSqlRepository) List(ctx context.Context, offset, limit int64) ([]entity.Notification, error) {
-	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at from notification where deleted_at is null offset $1 limit $2;`, offset, limit)
+func (r *NotificationSqlRepository) List(ctx context.Context, deleted bool, offset, limit int64) ([]entity.Notification, error) {
+	var rows pgx.Rows
+	var err error
+	if deleted {
+		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at from notification offset $1 limit $2;`, offset, limit)
+	} else {
+		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at from notification where deleted_at is null offset $1 limit $2;`, offset, limit)
+	}
 	err = db.PgError(err)
 	if err != nil {
 		return nil, err

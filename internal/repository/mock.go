@@ -21,8 +21,8 @@ func (m *MockRepository) Get(ctx context.Context, id string) (entity.Notificatio
 	return args.Get(0).(entity.Notification), args.Error(1)
 }
 
-func (m *MockRepository) List(ctx context.Context, offset, limit int64) ([]entity.Notification, error) {
-	args := m.Called(ctx, offset, limit)
+func (m *MockRepository) List(ctx context.Context, delete bool, offset, limit int64) ([]entity.Notification, error) {
+	args := m.Called(ctx, delete, offset, limit)
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 
