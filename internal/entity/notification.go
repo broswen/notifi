@@ -12,6 +12,7 @@ type Notification struct {
 	ModifiedAt  time.Time   `json:"modified_at"`
 	DeliveredAt *time.Time  `json:"delivered_at"`
 	SubmittedAt *time.Time  `json:"submitted_at"`
+	Partition   int         `json:"partition"`
 }
 
 type Destination struct {

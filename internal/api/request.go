@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/segmentio/ksuid"
+	"math/rand"
 	"regexp"
 	"time"
 )
@@ -42,11 +43,12 @@ func (nr *NotificationRequest) Validate() error {
 	return nil
 }
 
-func (nr NotificationRequest) IntoEntity() entity.Notification {
+func (nr NotificationRequest) IntoEntity(partitions int) entity.Notification {
 	k := ksuid.New()
 	//TODO calculate partition key here?
 	n := entity.Notification{
 		ID: k.String(),
+		Partition: rand.Intn(partitions),
 		Destination: entity.Destination{
 			Email: nr.Email,
 			SMS:   nr.SMS,

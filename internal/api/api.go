@@ -11,6 +11,7 @@ import (
 )
 
 type API struct {
+	Partitions int
 	Producer     producer.Producer
 	Notification repository.NotificationRepository
 }

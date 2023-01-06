@@ -35,8 +35,8 @@ func (r *NotificationSqlRepository) Get(ctx context.Context, id string) (entity.
 	n := entity.Notification{
 		Destination: entity.Destination{},
 	}
-	err := db.PgError(r.pool.QueryRow(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at from notification where id = $1 and deleted_at is null;`,
-		id).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt))
+	err := db.PgError(r.pool.QueryRow(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition from notification where id = $1 and deleted_at is null;`,
+		id).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt, &n.Partition))
 
 	if err != nil {
 		switch err {
@@ -56,9 +56,9 @@ func (r *NotificationSqlRepository) List(ctx context.Context, deleted bool, offs
 	var rows pgx.Rows
 	var err error
 	if deleted {
-		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at from notification offset $1 limit $2;`, offset, limit)
+		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition from notification offset $1 limit $2;`, offset, limit)
 	} else {
-		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at from notification where deleted_at is null offset $1 limit $2;`, offset, limit)
+		rows, err = r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition from notification where deleted_at is null offset $1 limit $2;`, offset, limit)
 	}
 	err = db.PgError(err)
 	if err != nil {
@@ -69,7 +69,7 @@ func (r *NotificationSqlRepository) List(ctx context.Context, deleted bool, offs
 	notifications := make([]entity.Notification, 0)
 	for rows.Next() {
 		n := entity.Notification{}
-		err = rows.Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt)
+		err = rows.Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt, &n.Partition)
 		if err != nil {
 			return notifications, err
 		}
@@ -85,8 +85,8 @@ func (r *NotificationSqlRepository) Save(ctx context.Context, n entity.Notificat
 	savedNotification := entity.Notification{
 		Destination: entity.Destination{},
 	}
-	err := db.PgError(r.pool.QueryRow(ctx, `insert into notification (id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at;`,
-		n.ID, n.Destination.Email, n.Destination.SMS, n.Content, n.Schedule, n.DeletedAt, n.CreatedAt, n.ModifiedAt, n.DeliveredAt, n.SubmittedAt).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt))
+	err := db.PgError(r.pool.QueryRow(ctx, `insert into notification (id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition;`,
+		n.ID, n.Destination.Email, n.Destination.SMS, n.Content, n.Schedule, n.DeletedAt, n.CreatedAt, n.ModifiedAt, n.DeliveredAt, n.SubmittedAt, n.Partition).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt, &n.Partition))
 
 	if err != nil {
 		switch err {
@@ -106,8 +106,8 @@ func (r *NotificationSqlRepository) Update(ctx context.Context, n entity.Notific
 	updatedNotification := entity.Notification{
 		Destination: entity.Destination{},
 	}
-	err := db.PgError(r.pool.QueryRow(ctx, `update notification set email_destination = $2, sms_destination = $3, content = $4, schedule = $5, deleted_at = $6, delivered_at = $7 where id = $1 returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at;`,
-		n.ID, n.Destination.Email, n.Destination.SMS, n.Content, n.Schedule, n.DeletedAt, n.DeliveredAt).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt))
+	err := db.PgError(r.pool.QueryRow(ctx, `update notification set email_destination = $2, sms_destination = $3, content = $4, schedule = $5, deleted_at = $6, delivered_at = $7, partition = $8 where id = $1 returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, submitted_at, partition;`,
+		n.ID, n.Destination.Email, n.Destination.SMS, n.Content, n.Schedule, n.DeletedAt, n.DeliveredAt, n.Partition).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.SubmittedAt, &n.Partition))
 
 	if err != nil {
 		switch err {
@@ -127,8 +127,8 @@ func (r *NotificationSqlRepository) Delete(ctx context.Context, id string) (enti
 	n := entity.Notification{
 		Destination: entity.Destination{},
 	}
-	err := db.PgError(r.pool.QueryRow(ctx, `update notification set deleted_at = now() where id = $1 returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at;`,
-		id).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt))
+	err := db.PgError(r.pool.QueryRow(ctx, `update notification set deleted_at = now() where id = $1 returning id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, partition;`,
+		id).Scan(&n.ID, &n.Destination.Email, &n.Destination.SMS, &n.Content, &n.Schedule, &n.DeletedAt, &n.CreatedAt, &n.ModifiedAt, &n.DeliveredAt, &n.Partition))
 
 	if err != nil {
 		switch err {

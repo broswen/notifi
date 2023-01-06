@@ -24,6 +24,7 @@ func TestHandleCreateNotification_Valid(t *testing.T) {
 	m.On("Submit", mock.Anything).Return(nil)
 	r := &repository.MockRepository{}
 	app := API{
+		Partitions: 1,
 		Producer:     m,
 		Notification: r,
 	}

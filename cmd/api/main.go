@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"github.com/broswen/notifi/internal/api"
 	"github.com/broswen/notifi/internal/db"
@@ -34,6 +35,16 @@ func main() {
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
 		log.Fatal().Msgf("postgres DSN is empty")
+	}
+
+	partitions := os.Getenv("PARTITIONS")
+	partitionsValue	:= 1
+	if partitions != "" {
+		val, err := strconv.ParseInt(partitions, 10, 32)
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		partitionsValue = int(val)
 	}
 
 	//Cloudflare Access Application policy AUD
@@ -79,6 +90,7 @@ func main() {
 	})
 
 	app := api.API{
+		Partitions: partitionsValue,
 		Producer:     p1,
 		Notification: notificationRepo,
 	}

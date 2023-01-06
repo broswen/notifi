@@ -84,7 +84,7 @@ func (api *API) HandleCreateNotification() http.HandlerFunc {
 			return
 		}
 
-		n := req.IntoEntity()
+		n := req.IntoEntity(api.Partitions)
 		err = api.Producer.Submit(n)
 		if err != nil {
 			log.Error().Err(err).Str("id", n.ID).Msg("error submitting notification")

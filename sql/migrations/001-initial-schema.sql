@@ -1,5 +1,6 @@
 create table notification (
     id text not null primary key,
+    partition int not null,
     email_destination text not null,
     sms_destination text not null,
     content text,
