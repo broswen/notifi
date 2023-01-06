@@ -31,6 +31,7 @@ data:
   BROKERS: kafka-clusterip.kafka.svc.cluster.local:9092
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
+  PARTITIONS: 100
   POLICY_AUD: <cloudflare access app policy aud>
   REQUEST_TOPIC: notifi-request
   TEAM_DOMAIN: <cloudflare access team domain>

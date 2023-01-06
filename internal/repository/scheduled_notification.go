@@ -10,7 +10,7 @@ import (
 
 type ScheduledNotificationRepository interface {
 	MarkSubmitted(ctx context.Context, id string) (entity.Notification, error)
-	ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error)
+	ListScheduled(ctx context.Context, period time.Duration, partitionStart, partitionEnd, offset, limit int64) ([]entity.Notification, error)
 }
 
 type ScheduledNotificationSqlRepository struct {
@@ -23,7 +23,7 @@ func NewScheduledNotificationSqlRepository(pool *pgxpool.Pool) (ScheduledNotific
 	}, nil
 }
 
-func (r *ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
+func (r *ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, period time.Duration, partitionStart, partitionEnd, offset, limit int64) ([]entity.Notification, error) {
 	//TODO take in a partition key and partition count
 	//TODO modulus the partition in the record with the partition count, if it matches the partition key then consume it
 	//TODO how to make this query less ugly?
@@ -32,12 +32,14 @@ func (r *ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, 
 	rows, err := r.pool.Query(ctx, `select id, email_destination, sms_destination, content, schedule, deleted_at, created_at, modified_at, delivered_at, partition from notification 
 		where delivered_at is null
 		and deleted_at is null 
+		and partition >= $4
+		and partition <= $5
 -- 		only submit if it hasn't been submitted or the previous submission was over 5 minutes ago
 		and (submitted_at is null or submitted_at < (now() - interval '5 min'))
 		and schedule is not null
 		and schedule < $1
 		order by schedule asc
-		offset $2 limit $3;`, p, offset, limit)
+		offset $2 limit $3;`, p, offset, limit, partitionStart, partitionEnd)
 	err = db.PgError(err)
 	if err != nil {
 		return nil, err

@@ -38,7 +38,7 @@ func main() {
 	}
 
 	partitions := os.Getenv("PARTITIONS")
-	partitionsValue	:= 1
+	partitionsValue	:= 100
 	if partitions != "" {
 		val, err := strconv.ParseInt(partitions, 10, 32)
 		if err != nil {

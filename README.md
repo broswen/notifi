@@ -9,7 +9,7 @@
 - [ ] api response types, entity -> response
 - [ ] bulk notifications, same content, many destinations?
 - [x] poll postgres for scheduled notifications and submit to delivery queue
-  - [ ] figure out how to partition/shard db polling for scaling (random number column with consistent hashing?)
+  - [x] assign notifications to random partition key, assign partition range to each poller replica
 - [x] prevent spam when db is down and notification is sent successfully
 - [x] add api service tokens
   - [ ] count messages via service client id and prometheus

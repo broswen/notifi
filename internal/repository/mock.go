@@ -26,8 +26,8 @@ func (m *MockRepository) List(ctx context.Context, delete bool, offset, limit in
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 
-func (m *MockRepository) ListScheduled(ctx context.Context, period time.Duration, offset, limit int64) ([]entity.Notification, error) {
-	args := m.Called(ctx, period, offset, limit)
+func (m *MockRepository) ListScheduled(ctx context.Context, period time.Duration, partitionStart, partitionEnd, offset, limit int64) ([]entity.Notification, error) {
+	args := m.Called(ctx, period, partitionStart, partitionEnd, offset, limit)
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 

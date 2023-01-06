@@ -32,6 +32,8 @@ data:
   DELIVERY_TOPIC: notifi-delivery
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
+  PARTITION_END: 99
+  PARTITION_START: 0
   POLL_INTERVAL: 1m
 ---
 # Source: poller/templates/deployment.yaml

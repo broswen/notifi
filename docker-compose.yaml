@@ -12,7 +12,7 @@ services:
       ./bin/notifi"
     environment:
       BROKERS: broker:9092
-      PARTITIONS: 2
+      PARTITIONS: 100
       DSN: postgres://postgres:password@postgres:5432/notifi
       REQUEST_TOPIC: notifi-request
     ports:
@@ -69,6 +69,8 @@ services:
       DSN: postgres://postgres:password@postgres:5432/notifi
       DELIVERY_TOPIC: notifi-delivery
       POLL_INTERVAL: 1m
+      PARTITION_START: 0
+      PARTITION_END: 99
 #TODO remove zookeeper and upgrade to kraft
   zookeeper:
     image: bitnami/zookeeper:latest

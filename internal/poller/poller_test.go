@@ -24,7 +24,7 @@ func TestSubmit(t *testing.T) {
 		Content:  "test message",
 		Schedule: &now,
 	}
-	p := NewScheduledNotificationPoller(r, pr, time.Minute, time.Minute*5, int64(10))
+	p := NewScheduledNotificationPoller(r, pr, time.Minute, time.Minute*5, int64(10), 0, 99)
 	pr.On("Submit", n).Return(nil)
 	r.On("MarkSubmitted", mock.Anything, n.ID).Return(n, nil)
 	err := p.Submit(context.Background(), n)
@@ -45,8 +45,8 @@ func TestPoll(t *testing.T) {
 		Schedule: &now,
 	}
 	//TODO this doesn't really align with how the concrete implementation works
-	p := NewScheduledNotificationPoller(r, pr, time.Second, time.Minute*5, int64(10))
-	r.On("ListScheduled", mock.Anything, time.Minute*5, int64(0), int64(10)).Return([]entity.Notification{n, n}, nil)
+	p := NewScheduledNotificationPoller(r, pr, time.Second, time.Minute*5, int64(10), 0, 99)
+	r.On("ListScheduled", mock.Anything, time.Minute*5, int64(0), int64(99), int64(0), int64(10)).Return([]entity.Notification{n, n}, nil)
 	pr.On("Submit", n).Return(nil)
 	r.On("MarkSubmitted", mock.Anything, mock.Anything).Return(n, nil)
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)

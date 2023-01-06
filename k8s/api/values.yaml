@@ -21,6 +21,7 @@ configmap:
     REQUEST_TOPIC: "notifi-request"
     TEAM_DOMAIN: <cloudflare access team domain>
     POLICY_AUD: <cloudflare access app policy aud>
+    PARTITIONS: 100
 
 imagePullSecrets: []
 nameOverride: ""
