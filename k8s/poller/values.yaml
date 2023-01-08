@@ -1,5 +1,7 @@
-
-replicaCount: 1
+# how many concurrent pollers to use, should divide partition key equally
+replicaCount: 2
+# how many partition keys are used for scheduling
+partitions: 100
 namespace: notifi
 
 image:
@@ -20,8 +22,6 @@ configmap:
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
     DELIVERY_TOPIC: "notifi-delivery"
     POLL_INTERVAL: "1m"
-    PARTITION_START: 0
-    PARTITION_END: 99
 
 imagePullSecrets: []
 nameOverride: ""

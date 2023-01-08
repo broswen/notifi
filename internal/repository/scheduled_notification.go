@@ -33,7 +33,7 @@ func (r *ScheduledNotificationSqlRepository) ListScheduled(ctx context.Context, 
 		where delivered_at is null
 		and deleted_at is null 
 		and partition >= $4
-		and partition <= $5
+		and partition < $5
 -- 		only submit if it hasn't been submitted or the previous submission was over 5 minutes ago
 		and (submitted_at is null or submitted_at < (now() - interval '5 min'))
 		and schedule is not null

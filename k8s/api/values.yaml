@@ -21,6 +21,7 @@ configmap:
     REQUEST_TOPIC: "notifi-request"
     TEAM_DOMAIN: <cloudflare access team domain>
     POLICY_AUD: <cloudflare access app policy aud>
+#   how many partition keys to use for scheduling
     PARTITIONS: 100
 
 imagePullSecrets: []

@@ -70,7 +70,7 @@ services:
       DELIVERY_TOPIC: notifi-delivery
       POLL_INTERVAL: 1m
       PARTITION_START: 0
-      PARTITION_END: 99
+      PARTITION_END: 100
 #TODO remove zookeeper and upgrade to kraft
   zookeeper:
     image: bitnami/zookeeper:latest

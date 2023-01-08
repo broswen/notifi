@@ -56,7 +56,12 @@ func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
 	extras := true
 	offset := int64(0)
 	for extras {
-		log.Debug().Str("interval", p.pollInterval.String()).Int64("limit", p.pollLimit).Msg("polling for scheduled messages")
+		log.Debug().
+			Str("interval", p.pollInterval.String()).
+			Int64("limit", p.pollLimit).
+			Int64("partition_start", p.partitionStart).
+			Int64("partition_end", p.partitionEnd).
+			Msg("polling for scheduled messages")
 		//TODO add notification partition key? for polling so we can scale the poller
 		notifications, err := p.Notification.ListScheduled(ctx, p.pollPeriod, p.partitionStart, p.partitionEnd, offset, p.pollLimit)
 		if err != nil {

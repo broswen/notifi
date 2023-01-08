@@ -1,52 +1,60 @@
+{{- range $i := until (.Values.replicaCount | int) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "poller.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  name: {{ include "poller.fullname" $ }}-{{ $i | toString }}
+  namespace: {{ $.Values.namespace }}
   labels:
-    {{- include "poller.labels" . | nindent 4 }}
+    {{- include "poller.labels" $ | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
-      {{- include "poller.selectorLabels" . | nindent 6 }}
+      {{- include "poller.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with $.Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "poller.selectorLabels" . | nindent 8 }}
+        {{- include "poller.selectorLabels" $ | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ $.Chart.Name }}-{{ $i | toString}}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "poller.fullname" . }}
+                name: {{ include "poller.fullname" $ }}
             - secretRef:
-                name: {{ include "poller.fullname" . }}
+                name: {{ include "poller.fullname" $ }}
+          env:
+            - name: PARTITION_START
+              value: {{ (mul $i (ceil (divf $.Values.partitions $.Values.replicaCount))) | quote }}
+            - name: PARTITION_END
+              value: {{ (mul (add1 $i ) (ceil (divf $.Values.partitions $.Values.replicaCount))) | quote }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+            {{- toYaml $.Values.resources | nindent 12 }}
+      {{- with $.Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with $.Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with $.Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+---
+{{- end }}
