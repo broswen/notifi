@@ -59,3 +59,5 @@ Receives notifications from the delivery queue and delivers them to the configur
 - [x] set up k8s
 - [x] add tests
 - [ ] schemas for all events in protobuf
+- [ ] protect against duplicate delivery by storing a list of delivered notification ids in redis
+  - set TTL on ids to store only for a certain period (1~ hour)
