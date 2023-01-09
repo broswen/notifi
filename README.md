@@ -3,6 +3,47 @@
 ![diagram.png](diagram.png)
 
 
+## API
+
+RESTful webservice that manages notifications.
+
+
+`POST /api/notifications`
+
+Submits a new notification to be processed.
+
+`GET /api/notifications`
+
+Returns a paginated list of notifications and their details. Add `?deleted=true` to show deleted notifications.
+
+Use `limit` and `offset` query params to control pagination.
+
+
+`GET /api/notifications/{id}`
+
+Returns the details for a single notification.
+
+`DELETE /api/notifications/{id}`
+
+Marks a notification as deleted. This prevents delivery of scheduled notifications.
+
+## Router
+
+A simple redirection service that processes messages from the Kafka topic and routes them to the correct destination.
+
+For notifications without a schedule, it submits them to the delivery queue to be delivered.
+
+For notification with a schedule, it stores them in the outbox table to be polled and delivered at a later time.
+
+## Poller
+
+Polls the notifications for events with a schedule that haven't been deleted or delivered and are due within the next polling period.
+
+Then it submits them to the delivery queue.
+
+## Delivery
+
+Receives notifications from the delivery queue and delivers them to the configured destinations.
 
 ### todo
 - [x] custom errors 
