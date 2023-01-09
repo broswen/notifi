@@ -38,6 +38,8 @@ data:
   DELIVERY_TOPIC: notifi-delivery
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
+  REDIS_HOST: redis:6379
+  REDIS_TTL: 1h
   SKIP_DELIVERY: "true"
 ---
 # Source: delivery/templates/deployment.yaml

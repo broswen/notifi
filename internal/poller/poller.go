@@ -16,24 +16,24 @@ type Poller interface {
 }
 
 type ScheduledNotificationPoller struct {
-	Notification repository.ScheduledNotificationRepository
-	Producer     producer.Producer
-	pollInterval time.Duration
-	pollPeriod   time.Duration
-	pollLimit    int64
+	Notification   repository.ScheduledNotificationRepository
+	Producer       producer.Producer
+	pollInterval   time.Duration
+	pollPeriod     time.Duration
+	pollLimit      int64
 	partitionStart int64
-	partitionEnd int64
+	partitionEnd   int64
 }
 
 func NewScheduledNotificationPoller(notificationRepository repository.ScheduledNotificationRepository, producer producer.Producer, pollInterval, pollPeriod time.Duration, pollLimit, partitionStart, partitionEnd int64) *ScheduledNotificationPoller {
 	return &ScheduledNotificationPoller{
-		Notification: notificationRepository,
-		Producer:     producer,
-		pollInterval: pollInterval,
-		pollPeriod:   pollPeriod,
-		pollLimit:    pollLimit,
+		Notification:   notificationRepository,
+		Producer:       producer,
+		pollInterval:   pollInterval,
+		pollPeriod:     pollPeriod,
+		pollLimit:      pollLimit,
 		partitionStart: partitionStart,
-		partitionEnd: partitionEnd,
+		partitionEnd:   partitionEnd,
 	}
 }
 
@@ -62,7 +62,6 @@ func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
 			Int64("partition_start", p.partitionStart).
 			Int64("partition_end", p.partitionEnd).
 			Msg("polling for scheduled messages")
-		//TODO add notification partition key? for polling so we can scale the poller
 		notifications, err := p.Notification.ListScheduled(ctx, p.pollPeriod, p.partitionStart, p.partitionEnd, offset, p.pollLimit)
 		if err != nil {
 			log.Error().Err(err).Msg("error listing scheduled notifications")

@@ -8,6 +8,7 @@ import (
 	"github.com/broswen/notifi/internal/queue/consumer"
 	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-redis/redis/v9"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -77,6 +79,26 @@ func main() {
 		log.Debug().Str("SKIP_DELIVERY", skipDelivery).Msg("skip delivery mode")
 	}
 
+	redisHost := os.Getenv("REDIS_HOST")
+	var rdb *redis.Client
+	if redisHost == "" {
+		log.Warn().Msg("REDIS_HOST is empty, disabling notification deduplication")
+	} else {
+		rdb = redis.NewClient(&redis.Options{
+			Addr: redisHost,
+		})
+	}
+
+	redisTTL := os.Getenv("REDIS_TTL")
+	dedupTTL := time.Hour
+	var err error
+	if redisTTL != "" {
+		dedupTTL, err = time.ParseDuration(redisTTL)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to parse REDIS_TTL")
+		}
+	}
+
 	email, err := destination.NewEmailDestination(sendGridApiKey, fromName, fromEmail)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating email destination")
@@ -106,7 +128,7 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating notification repository")
 	}
 
-	c.HandleFunc(deliveryTopic, HandleDelivery(notificationRepo, sms, email, l, skipDelivery))
+	c.HandleFunc(deliveryTopic, HandleDelivery(notificationRepo, sms, email, l, rdb, dedupTTL, skipDelivery))
 
 	err = c.Consume()
 	if err != nil {

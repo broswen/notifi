@@ -15,4 +15,7 @@ var (
 		Name:    "scheduled_delivery_offset",
 		Buckets: []float64{float64(time.Minute * -10), float64(time.Minute * -6), float64(time.Minute * -3), float64(time.Minute * -1), float64(time.Second * -30), float64(time.Second * -10)},
 	})
+	DuplicateDelivery = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "duplicate_notification_id",
+	})
 )

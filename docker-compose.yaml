@@ -54,6 +54,8 @@ services:
       TWILIO_TOKEN: 123
       FROM_NUMBER: 18005551234
       SKIP_DELIVERY: true
+      REDIS_HOST: redis:6379
+      REDIS_TTL: 1h
   poller:
     build:
       context: .
@@ -107,3 +109,9 @@ services:
       POSTGRES_DB: notifi
     ports:
       - "5432:5432"
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis:7.0.7
+    ports:
+      -  "6379:6379"
