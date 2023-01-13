@@ -17,6 +17,6 @@ func NewLogDestination(name string) (Destination, error) {
 
 func (d *LogDestination) Deliver(n entity.Notification) error {
 	log.Debug().Str("name", d.name).Str("notification_id", n.ID).Msgf("delivered %s to %s", n.ID, d.name)
-	NotificationDelivered.Inc()
+	NotificationDelivered.WithLabelValues("log").Inc()
 	return nil
 }

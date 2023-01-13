@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	NotificationDelivered = promauto.NewCounter(prometheus.CounterOpts{
+	NotificationDelivered = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "notification_delivered",
-	})
+	}, []string{"destination_type"})
 )

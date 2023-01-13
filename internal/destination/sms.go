@@ -35,6 +35,6 @@ func (d *SMSDestination) Deliver(n entity.Notification) error {
 	if err != nil {
 		return err
 	}
-	NotificationDelivered.Inc()
+	NotificationDelivered.WithLabelValues("sms").Inc()
 	return nil
 }

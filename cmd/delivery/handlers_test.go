@@ -16,7 +16,7 @@ func TestHandleDelivery_Email(t *testing.T) {
 	email := &destination.MockDestination{}
 	l := &destination.MockDestination{}
 	skipDelivery := ""
-	handler := HandleDelivery(nr, sms, email, l, skipDelivery)
+	handler := HandleDelivery(nr, sms, email, l, nil, time.Hour, skipDelivery)
 	n := entity.Notification{
 		ID: "abc123",
 		Destination: entity.Destination{
@@ -55,7 +55,7 @@ func TestHandleDelivery_Sms(t *testing.T) {
 	email := &destination.MockDestination{}
 	l := &destination.MockDestination{}
 	skipDelivery := ""
-	handler := HandleDelivery(nr, sms, email, l, skipDelivery)
+	handler := HandleDelivery(nr, sms, email, l, nil, time.Hour, skipDelivery)
 	n := entity.Notification{
 		ID: "abc123",
 		Destination: entity.Destination{
