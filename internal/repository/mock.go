@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/broswen/notifi/internal/entity"
-	"github.com/stretchr/testify/mock"
 	"time"
+
+	"github.com/stretchr/testify/mock"
+
+	"github.com/broswen/notifi/internal/entity"
 )
 
 type MockRepository struct {
@@ -26,8 +28,8 @@ func (m *MockRepository) List(ctx context.Context, delete bool, offset, limit in
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 
-func (m *MockRepository) ListScheduled(ctx context.Context, period time.Duration, partitionStart, partitionEnd, offset, limit int64) ([]entity.Notification, error) {
-	args := m.Called(ctx, period, partitionStart, partitionEnd, offset, limit)
+func (m *MockRepository) ListScheduled(ctx context.Context, period time.Duration, limit int64) ([]entity.Notification, error) {
+	args := m.Called(ctx, period, limit)
 	return args.Get(0).([]entity.Notification), args.Error(1)
 }
 

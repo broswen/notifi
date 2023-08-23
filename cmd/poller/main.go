@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/broswen/notifi/internal/db"
-	poller2 "github.com/broswen/notifi/internal/poller"
-	"github.com/broswen/notifi/internal/queue/producer"
-	"github.com/broswen/notifi/internal/repository"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
-	"net/http"
-	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
-	"time"
+
+	"github.com/broswen/notifi/internal/db"
+	poller2 "github.com/broswen/notifi/internal/poller"
+	"github.com/broswen/notifi/internal/queue/producer"
 )
 
 func main() {
@@ -51,48 +51,22 @@ func main() {
 		log.Fatal().Err(err).Msg("error parsing poll interval")
 	}
 
-	partitionStart := os.Getenv("PARTITION_START")
-	var partitionStartValue	int64
-	if partitionStart != "" {
-		partitionStartValue, err = strconv.ParseInt(partitionStart, 10, 64)
-		if err != nil {
-			log.Fatal().Err(err).Msg("invalid PARTITION_START")
-		}
-	} else {
-		log.Fatal().Msg("PARTITION_START must be defined")
-	}
-
-
-	partitionEnd := os.Getenv("PARTITION_END")
-	var partitionEndValue int64
-	if partitionEnd != "" {
-		partitionEndValue, err = strconv.ParseInt(partitionEnd, 10, 64)
-		if err != nil {
-			log.Fatal().Err(err).Msg("invalid PARTITION_END")
-		}
-	} else {
-		log.Fatal().Msg("PARTITION_END must be defined")
-	}
-
 	p, err := producer.NewKafkaProducer("poller", deliveryTopic, brokers)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating kafka producer")
 	}
 
-	pool, err := db.InitDB(context.Background(), dsn)
+	pool, err := db.InitDB(dsn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating postgres pool")
 	}
-	scheduledRepo, err := repository.NewScheduledNotificationSqlRepository(pool)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error creating scheduled notification repository")
-	}
+
 	eg := errgroup.Group{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	pollPeriod := time.Minute * 5
 	pollLimit := int64(100)
-	poller := poller2.NewScheduledNotificationPoller(scheduledRepo, p, interval, pollPeriod, pollLimit, partitionStartValue, partitionEndValue)
+	poller := poller2.NewScheduledNotificationPoller(pool, p, interval, pollPeriod, pollLimit)
 
 	eg.Go(func() error {
 		return poller.Poll(ctx)

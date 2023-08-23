@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/broswen/notifi/internal/api"
 	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
-	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -35,16 +35,6 @@ func main() {
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
 		log.Fatal().Msgf("postgres DSN is empty")
-	}
-
-	partitions := os.Getenv("PARTITIONS")
-	partitionsValue	:= 100
-	if partitions != "" {
-		val, err := strconv.ParseInt(partitions, 10, 32)
-		if err != nil {
-			log.Fatal().Err(err)
-		}
-		partitionsValue = int(val)
 	}
 
 	//Cloudflare Access Application policy AUD
@@ -67,7 +57,7 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating kafka producer")
 	}
 
-	pool, err := db.InitDB(context.Background(), dsn)
+	pool, err := db.InitDB(dsn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating postgres pool")
 	}
@@ -90,7 +80,6 @@ func main() {
 	})
 
 	app := api.API{
-		Partitions: partitionsValue,
 		Producer:     p1,
 		Notification: notificationRepo,
 	}

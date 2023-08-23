@@ -75,11 +75,6 @@ spec:
                 name: poller
             - secretRef:
                 name: poller
-          env:
-            - name: PARTITION_START
-              value: "0"
-            - name: PARTITION_END
-              value: "50"
           resources:
             limits:
               cpu: 150m
@@ -129,11 +124,6 @@ spec:
                 name: poller
             - secretRef:
                 name: poller
-          env:
-            - name: PARTITION_START
-              value: "50"
-            - name: PARTITION_END
-              value: "100"
           resources:
             limits:
               cpu: 150m

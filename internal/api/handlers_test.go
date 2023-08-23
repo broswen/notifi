@@ -2,16 +2,18 @@ package api
 
 import (
 	"bytes"
-	"github.com/broswen/notifi/internal/entity"
-	"github.com/broswen/notifi/internal/queue/producer"
-	"github.com/broswen/notifi/internal/repository"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/broswen/notifi/internal/entity"
+	"github.com/broswen/notifi/internal/queue/producer"
+	"github.com/broswen/notifi/internal/repository"
 )
 
 func TestHandleCreateNotification_Valid(t *testing.T) {
@@ -24,7 +26,6 @@ func TestHandleCreateNotification_Valid(t *testing.T) {
 	m.On("Submit", mock.Anything).Return(nil)
 	r := &repository.MockRepository{}
 	app := API{
-		Partitions: 1,
 		Producer:     m,
 		Notification: r,
 	}

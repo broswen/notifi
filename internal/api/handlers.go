@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/rs/zerolog/log"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (api *API) HandleGetNotification() http.HandlerFunc {
@@ -84,7 +85,7 @@ func (api *API) HandleCreateNotification() http.HandlerFunc {
 			return
 		}
 
-		n := req.IntoEntity(api.Partitions)
+		n := req.IntoEntity()
 		err = api.Producer.Submit(n)
 		if err != nil {
 			log.Error().Err(err).Str("id", n.ID).Msg("error submitting notification")

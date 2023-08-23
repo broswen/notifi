@@ -37,11 +37,6 @@ spec:
                 name: {{ include "poller.fullname" $ }}
             - secretRef:
                 name: {{ include "poller.fullname" $ }}
-          env:
-            - name: PARTITION_START
-              value: {{ (mul $i (ceil (divf $.Values.partitions $.Values.replicaCount))) | quote }}
-            - name: PARTITION_END
-              value: {{ (mul (add1 $i ) (ceil (divf $.Values.partitions $.Values.replicaCount))) | quote }}
           resources:
             {{- toYaml $.Values.resources | nindent 12 }}
       {{- with $.Values.nodeSelector }}

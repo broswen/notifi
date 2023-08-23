@@ -2,11 +2,12 @@ package api
 
 import (
 	"errors"
-	"github.com/broswen/notifi/internal/entity"
-	"github.com/segmentio/ksuid"
-	"math/rand"
 	"regexp"
 	"time"
+
+	"github.com/segmentio/ksuid"
+
+	"github.com/broswen/notifi/internal/entity"
 )
 
 var emailRegexp = regexp.MustCompile("^[-0-9a-zA-Z]+@[-0-9a-zA-Z]+\\.[a-zA-Z]{2,3}$")
@@ -43,12 +44,10 @@ func (nr *NotificationRequest) Validate() error {
 	return nil
 }
 
-func (nr NotificationRequest) IntoEntity(partitions int) entity.Notification {
+func (nr NotificationRequest) IntoEntity() entity.Notification {
 	k := ksuid.New()
-	//TODO calculate partition key here?
 	n := entity.Notification{
 		ID: k.String(),
-		Partition: rand.Intn(partitions),
 		Destination: entity.Destination{
 			Email: nr.Email,
 			SMS:   nr.SMS,

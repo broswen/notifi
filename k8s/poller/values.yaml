@@ -1,7 +1,5 @@
-# how many concurrent pollers to use, should divide partition key equally
+# how many concurrent pollers to use
 replicaCount: 2
-# how many partition keys are used for scheduling
-partitions: 100
 namespace: notifi
 
 image:

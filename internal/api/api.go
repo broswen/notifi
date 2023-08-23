@@ -3,15 +3,15 @@ package api
 import (
 	"net/http"
 
-	"github.com/broswen/notifi/internal/queue/producer"
-	"github.com/broswen/notifi/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+
+	"github.com/broswen/notifi/internal/queue/producer"
+	"github.com/broswen/notifi/internal/repository"
 )
 
 type API struct {
-	Partitions int
 	Producer     producer.Producer
 	Notification repository.NotificationRepository
 }
