@@ -49,8 +49,10 @@ Receives notifications from the delivery queue and delivers them to the configur
 - [x] custom errors 
 - [ ] api response types, entity -> response
 - [ ] bulk notifications, same content, many destinations?
+- [ ] update repositories to accept a connection instead of pool
 - [x] poll postgres for scheduled notifications and submit to delivery queue
   - [x] assign notifications to random partition key, assign partition range to each poller replica
+  - [x] use `select for update skip locked`
 - [x] prevent spam when db is down and notification is sent successfully
 - [x] add api service tokens
   - [ ] count messages via service client id and prometheus

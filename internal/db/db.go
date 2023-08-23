@@ -2,25 +2,34 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/rs/zerolog/log"
 	"strings"
+
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/rs/zerolog/log"
 )
 
-func InitDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.Connect(ctx, dsn)
+type Conn interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+}
+
+func InitDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := pool.Ping(ctx); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
-	return pool, nil
+	return db, nil
 }
 
 var (
@@ -59,7 +68,7 @@ func PgError(err error) error {
 	}
 
 	//pgx returns ErrNoRows
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
 

@@ -3,19 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/broswen/notifi/internal/queue/consumer"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
-	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -57,7 +59,7 @@ func main() {
 	}
 	defer p1.Close()
 
-	pool, err := db.InitDB(context.Background(), dsn)
+	pool, err := db.InitDB(dsn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating postgres pool")
 	}

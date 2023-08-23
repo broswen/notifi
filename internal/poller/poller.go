@@ -2,11 +2,15 @@ package poller
 
 import (
 	"context"
+	"database/sql"
+	"time"
+
+	"github.com/rs/zerolog/log"
+
+	"github.com/broswen/notifi/internal/db"
 	"github.com/broswen/notifi/internal/entity"
 	"github.com/broswen/notifi/internal/queue/producer"
 	"github.com/broswen/notifi/internal/repository"
-	"github.com/rs/zerolog/log"
-	"time"
 )
 
 // Poller is an interface that polls and submits the items to a producer
@@ -16,24 +20,20 @@ type Poller interface {
 }
 
 type ScheduledNotificationPoller struct {
-	Notification   repository.ScheduledNotificationRepository
-	Producer       producer.Producer
-	pollInterval   time.Duration
-	pollPeriod     time.Duration
-	pollLimit      int64
-	partitionStart int64
-	partitionEnd   int64
+	db           *sql.DB
+	Producer     producer.Producer
+	pollInterval time.Duration
+	pollPeriod   time.Duration
+	pollLimit    int64
 }
 
-func NewScheduledNotificationPoller(notificationRepository repository.ScheduledNotificationRepository, producer producer.Producer, pollInterval, pollPeriod time.Duration, pollLimit, partitionStart, partitionEnd int64) *ScheduledNotificationPoller {
+func NewScheduledNotificationPoller(db *sql.DB, producer producer.Producer, pollInterval, pollPeriod time.Duration, pollLimit int64) *ScheduledNotificationPoller {
 	return &ScheduledNotificationPoller{
-		Notification:   notificationRepository,
-		Producer:       producer,
-		pollInterval:   pollInterval,
-		pollPeriod:     pollPeriod,
-		pollLimit:      pollLimit,
-		partitionStart: partitionStart,
-		partitionEnd:   partitionEnd,
+		db:           db,
+		Producer:     producer,
+		pollInterval: pollInterval,
+		pollPeriod:   pollPeriod,
+		pollLimit:    pollLimit,
 	}
 }
 
@@ -52,17 +52,20 @@ func (p *ScheduledNotificationPoller) Poll(ctx context.Context) error {
 	}
 }
 
-func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
+func (p *ScheduledNotificationPoller) poll(ctx context.Context) error {
 	extras := true
 	offset := int64(0)
 	for extras {
 		log.Debug().
 			Str("interval", p.pollInterval.String()).
 			Int64("limit", p.pollLimit).
-			Int64("partition_start", p.partitionStart).
-			Int64("partition_end", p.partitionEnd).
 			Msg("polling for scheduled messages")
-		notifications, err := p.Notification.ListScheduled(ctx, p.pollPeriod, p.partitionStart, p.partitionEnd, offset, p.pollLimit)
+		tx, err := p.db.BeginTx(ctx, nil)
+		if err != nil {
+			log.Error().Err(err).Msg("error starting tx")
+			return err
+		}
+		notifications, err := repository.NewScheduledNotificationSqlRepository(tx).ListScheduled(ctx, p.pollPeriod, p.pollLimit)
 		if err != nil {
 			log.Error().Err(err).Msg("error listing scheduled notifications")
 			PollErrors.Inc()
@@ -74,17 +77,21 @@ func (p *ScheduledNotificationPoller) poll(ctx context.Context) {
 		extras = int64(len(notifications)) == p.pollLimit
 		offset += p.pollLimit
 		for _, n := range notifications {
-			err := p.Submit(ctx, n)
+			err := p.Submit(ctx, tx, n)
 			if err != nil {
 				log.Error().Err(err).Str("notification_id", n.ID).Msg("error submitting notification")
 				continue
 			}
 		}
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msg("error ending tx")
+		}
 		SuccessfulPoll.Inc()
 	}
+	return nil
 }
 
-func (p *ScheduledNotificationPoller) Submit(ctx context.Context, n entity.Notification) error {
+func (p *ScheduledNotificationPoller) Submit(ctx context.Context, db db.Conn, n entity.Notification) error {
 	log.Debug().Str("notification_id", n.ID).Time("schedule", *n.Schedule).Msg("submitting scheduled notification")
 	err := p.Producer.Submit(n)
 	if err != nil {
@@ -92,7 +99,7 @@ func (p *ScheduledNotificationPoller) Submit(ctx context.Context, n entity.Notif
 	}
 	now := time.Now()
 	n.SubmittedAt = &now
-	_, err = p.Notification.MarkSubmitted(ctx, n.ID)
+	_, err = repository.NewScheduledNotificationSqlRepository(db).MarkSubmitted(ctx, n.ID)
 	if err != nil {
 		log.Error().Err(err).Str("notification_id", n.ID).Msg("error marking notification as submitted")
 		return err

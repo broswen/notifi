@@ -1,22 +1,23 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"github.com/broswen/notifi/internal/db"
-	"github.com/broswen/notifi/internal/destination"
-	"github.com/broswen/notifi/internal/queue/consumer"
-	"github.com/broswen/notifi/internal/repository"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-redis/redis/v9"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-redis/redis/v9"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/broswen/notifi/internal/db"
+	"github.com/broswen/notifi/internal/destination"
+	"github.com/broswen/notifi/internal/queue/consumer"
+	"github.com/broswen/notifi/internal/repository"
 )
 
 func main() {
@@ -119,7 +120,7 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating kafka consumer")
 	}
 
-	pool, err := db.InitDB(context.Background(), dsn)
+	pool, err := db.InitDB(dsn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating postgres pool")
 	}

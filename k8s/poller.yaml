@@ -38,7 +38,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: poller-0
+  name: poller
   namespace: notifi
   labels:
     helm.sh/chart: poller-0.1.0
@@ -47,7 +47,7 @@ metadata:
     app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: poller
@@ -65,7 +65,7 @@ spec:
       securityContext:
         {}
       containers:
-        - name: poller-0
+        - name: poller
           securityContext:
             {}
           image: "broswen/notifi-poller:latest"
@@ -75,65 +75,6 @@ spec:
                 name: poller
             - secretRef:
                 name: poller
-          env:
-            - name: PARTITION_START
-              value: "0"
-            - name: PARTITION_END
-              value: "50"
-          resources:
-            limits:
-              cpu: 150m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
----
-# Source: poller/templates/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: poller-1
-  namespace: notifi
-  labels:
-    helm.sh/chart: poller-0.1.0
-    app.kubernetes.io/name: poller
-    app.kubernetes.io/instance: poller
-    app.kubernetes.io/version: "1.16.0"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: poller
-      app.kubernetes.io/instance: poller
-  template:
-    metadata:
-      annotations:
-        prometheus.io/path: /metrics
-        prometheus.io/port: "8081"
-        prometheus.io/scrape: "true"
-      labels:
-        app.kubernetes.io/name: poller
-        app.kubernetes.io/instance: poller
-    spec:
-      securityContext:
-        {}
-      containers:
-        - name: poller-1
-          securityContext:
-            {}
-          image: "broswen/notifi-poller:latest"
-          imagePullPolicy: Always
-          envFrom:
-            - configMapRef:
-                name: poller
-            - secretRef:
-                name: poller
-          env:
-            - name: PARTITION_START
-              value: "50"
-            - name: PARTITION_END
-              value: "100"
           resources:
             limits:
               cpu: 150m
